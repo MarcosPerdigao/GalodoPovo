@@ -1,0 +1,406 @@
+/* frontend/src/App.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Arial", sans-serif;
+}
+
+body {
+  background-color: #000;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+/* Fundo do Escudo */
+.bg-galo {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.08;
+  width: clamp(300px, 50vw, 800px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Header Fixo */
+.header-protesto {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  padding: 20px;
+  background: rgba(17, 17, 17, 0.95);
+  border-bottom: 2px solid #fff;
+}
+
+.header-protesto h1 {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  text-transform: uppercase;
+  font-weight: 900;
+  margin-bottom: 5px;
+}
+
+.contador {
+  font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+  color: #ccc;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.contador span {
+  display: inline-block;
+}
+.contador strong {
+  color: #d32f2f;
+}
+.contador strong:last-child {
+  color: #ff9800;
+  font-size: clamp(1rem, 1.8vw, 1.3rem);
+}
+
+/* Container Split Screen - CORRIGIDO PARA NÃO QUEBRAR NO ZOOM */
+.split-container {
+  display: flex;
+  flex-direction: row; /* Força lado a lado no PC */
+  height: calc(100vh - 100px); /* Altura exata da tela menos o header */
+  width: 100%;
+  position: relative;
+  z-index: 5;
+}
+
+.split-side {
+  width: 50%;
+  height: 100%;
+  position: relative;
+  perspective: 2000px;
+}
+
+/* O Cartão que vai girar */
+.card {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s ease-in-out;
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+.card.is-flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+/* Frente e Verso */
+.card-face {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: none;
+}
+
+/* Estilo para a Frente (Foto Inteira) */
+.card-front {
+  background-color: #000;
+  background-size: cover;
+  background-position: top center;
+  background-repeat: no-repeat;
+}
+
+/* Sobreposição de Texto */
+.sobreposicao-texto {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 40px 20px 30px 20px;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.8) 60%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  text-align: center;
+}
+
+.card-front h2 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  text-transform: uppercase;
+  font-weight: 900;
+  margin-bottom: 5px;
+  color: #fff;
+  text-shadow: 2px 2px 4px #000;
+}
+
+.card-front p {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  color: #ddd;
+  margin-bottom: 15px;
+}
+
+/* Botão Vermelho */
+.btn-expor {
+  background-color: #d32f2f;
+  color: #fff;
+  border: 2px solid #b71c1c;
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.2s;
+  animation: pulse 2s infinite;
+}
+
+.btn-expor:hover {
+  transform: scale(1.1);
+  background-color: #b71c1c;
+}
+
+/* Estilo para o Verso */
+.card-back {
+  background-color: #0a0a0a;
+  /* Fundo quase 100% preto */
+  color: #ddd;
+  /* Texto do parágrafo em cinza claro para não cansar a vista */
+  transform: rotateY(180deg);
+  justify-content: flex-start;
+  align-items: center;
+  overflow-y: auto;
+  padding: clamp(20px, 5vw, 50px);
+  border: 2px solid #d32f2f;
+  /* Mantém a borda vermelha */
+}
+
+.card-back h3 {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  color: #d32f2f;
+  /* Título 'A Realidade' em vermelho */
+  border-bottom: 3px solid #333;
+  /* Linha divisória discreta */
+  padding-bottom: 10px;
+  width: 100%;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  font-weight: 900;
+}
+
+.mentiras-lista {
+  text-align: left;
+  list-style: none;
+  width: 100%;
+}
+.mentiras-lista li {
+  margin-bottom: 15px;
+  font-size: clamp(0.95rem, 1.8vw, 1.1rem);
+  line-height: 1.5;
+}
+.mentiras-lista li strong {
+  display: block;
+  font-size: clamp(1.05rem, 2vw, 1.2rem);
+  margin-bottom: 5px;
+  color: #fff;
+  /* Tópicos principais agora em Branco Brilhante */
+}
+.mentiras-lista li span {
+  color: #d32f2f;
+  font-weight: bold;
+}
+
+/* Seção de Matérias do Node no final da página */
+.materias-section {
+  position: relative;
+  z-index: 10;
+  padding: 60px 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: left;
+}
+.materia-item {
+  background: rgba(15, 15, 15, 0.95);
+  padding: 30px;
+  border-left: 5px solid #d32f2f;
+  margin-bottom: 30px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+.materia-item h2 {
+  color: #fff;
+  margin-bottom: 15px;
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+}
+.materia-item p {
+  color: #ccc;
+  font-size: clamp(1rem, 2vw, 1.1rem);
+  line-height: 1.6;
+}
+
+/* Responsividade e Proteção contra Zoom */
+@media (max-width: 900px) {
+  .split-container {
+    flex-direction: column; /* Empilha um em cima do outro */
+    height: auto; /* Libera a altura total para não esmagar os cartões */
+  }
+  .split-side {
+    width: 100%;
+    height: 70vh; /* GARANTE QUE O CARTÃO TENHA ALTURA MESMO NO ZOOM */
+    border-bottom: 4px solid #fff;
+  }
+  .card-front h2 {
+    font-size: 2.2rem;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Botão de Fonte nas Matérias */
+.btn-fonte {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 15px;
+  background-color: transparent;
+  color: #ff5252; /* Vermelho claro para link */
+  border: 1px solid #ff5252;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.btn-fonte:hover {
+  background-color: #ff5252;
+  color: #000;
+}
+
+/* Título da Seção Dossiê */
+.titulo-secao {
+  text-align: center;
+  margin-bottom: 40px;
+  color: #fff;
+  text-transform: uppercase;
+  font-size: clamp(2rem, 5vw, 2.5rem);
+  font-weight: 900;
+  border-bottom: 2px solid #d32f2f;
+  padding-bottom: 10px;
+}
+
+/* Botão de Fonte nas Matérias */
+.btn-fonte {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 15px;
+  background-color: transparent;
+  color: #ff5252;
+  border: 1px solid #ff5252;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.btn-fonte:hover {
+  background-color: #ff5252;
+  color: #000;
+}
+
+/* Formulário de Denúncias */
+.form-section {
+  position: relative;
+  z-index: 10;
+  padding: 40px 20px 80px 20px;
+  background-color: #050505;
+  border-top: 2px solid #333;
+}
+
+.form-container {
+  max-width: 700px;
+  margin: 0 auto;
+  text-align: center;
+  background: rgba(20, 20, 20, 0.9);
+  padding: 40px;
+  border: 2px solid #d32f2f;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+}
+
+.form-container h2 {
+  color: #fff;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.form-container p {
+  color: #aaa;
+  margin-bottom: 30px;
+  font-size: 1.1rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 15px;
+  margin-bottom: 20px;
+  background-color: #111;
+  border: 1px solid #444;
+  color: #fff;
+  font-size: 1rem;
+  border-radius: 5px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.form-input:focus {
+  border-color: #d32f2f;
+}
+
+.btn-enviar {
+  background-color: #d32f2f;
+  color: #fff;
+  border: none;
+  padding: 15px 40px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.3s;
+}
+
+.btn-enviar:hover {
+  background-color: #b71c1c;
+}
+
+.status-mensagem {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #1b5e20; /* Verde escuro */
+  color: #fff;
+  font-weight: bold;
+  border-radius: 5px;
+  animation: pulse 2s infinite;
+}
