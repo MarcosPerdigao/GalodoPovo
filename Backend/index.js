@@ -135,10 +135,15 @@ app.get("/api/contador", (req, res) => {
 });
 
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // Tem que ser false para a porta 587
   auth: {
     user: "galodopovo13@gmail.com",
-    pass: process.env.EMAIL_PASSWORD, // Deixe assim para manter a segurança!
+    pass: process.env.EMAIL_PASSWORD,
+  },
+  tls: {
+    rejectUnauthorized: false, // Ajuda a evitar bloqueios de rede do servidor
   },
 });
 
