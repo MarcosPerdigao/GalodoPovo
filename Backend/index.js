@@ -135,18 +135,20 @@ app.get("/api/contador", (req, res) => {
 });
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
+  // Trocamos o nome pelo IP direto para forçar IPv4 e evitar erros de rede
+  host: "74.125.193.108",
   port: 587,
-  secure: false, // Tem que ser false para a porta 587
+  secure: false,
   auth: {
     user: "galodopovo13@gmail.com",
     pass: process.env.EMAIL_PASSWORD,
   },
   tls: {
-    rejectUnauthorized: false, // Ajuda a evitar bloqueios de rede do servidor
+    // Isso garante que a conexão aceite o certificado do Gmail mesmo via IP
+    servername: "smtp.gmail.com",
+    rejectUnauthorized: false,
   },
 });
-
 app.post("/api/sugestoes", async (req, res) => {
   const { nome, email, mensagem } = req.body;
 
