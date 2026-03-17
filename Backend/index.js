@@ -1,7 +1,7 @@
 // backend/index.js
 const express = require("express");
 const cors = require("cors");
-
+const nodemailer = require("nodemailer");
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -134,19 +134,38 @@ app.get("/api/contador", (req, res) => {
   });
 });
 
-// NOVA ROTA: Receber formulário de denúncias
-app.post("/api/sugestoes", (req, res) => {
-  const { nome, email, mensagem } = req.body;
-
-  // Aqui no futuro você pode conectar um banco de dados ou enviar para seu e-mail
-  console.log(`Nova denúncia recebida de ${nome} (${email}): ${mensagem}`);
-
-  res.json({
-    success: true,
-    message:
-      "Denúncia recebida com sucesso! A voz da arquibancada não será calada.",
-  });
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "galodopovo13@gmail.com",
+    pass: process.env.EMAIL_PASSWORD, // Deixe assim para manter a segurança!
+  },
 });
 
+app.post("/api/sugestoes", async (req, res) => {
+  const { nome, email, mensagem } = req.body;
+
+  // No mailOptions, atualize também o remetente e destinatário
+  const mailOptions = {
+    from: "Galo do Povo <galodopovo13@gmail.com>",
+    to: "galodopovo13@gmail.com", // Se quiser receber no mesmo e-mail
+    subject: "⚠️ NOVA DENÚNCIA: Galo do Povo",
+    text: `Nome: ${nome}\nE-mail de contato: ${email}\n\nMensagem:\n${mensagem}`,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log("E-mail enviado com sucesso!");
+    res.json({
+      success: true,
+      message: "Denúncia recebida! O e-mail já chegou para o administrador.",
+    });
+  } catch (error) {
+    console.error("Erro ao enviar e-mail:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Erro ao processar envio." });
+  }
+});
 const port = 4000;
 app.listen(port, () => console.log(`Backend rodando na porta ${port}`));
