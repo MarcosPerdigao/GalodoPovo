@@ -10,9 +10,6 @@ export default function App() {
     diasTecnico: 0,
   });
 
-  const [flipRafael, setFlipRafael] = useState(false);
-  const [flipRubens, setFlipRubens] = useState(false);
-
   // Estados do Formulário de Denúncia
   const [form, setForm] = useState({ nome: "", email: "", mensagem: "" });
   const [statusEnvio, setStatusEnvio] = useState("");
@@ -63,78 +60,166 @@ export default function App() {
         </p>
       </header>
 
+      {/* BANNER DA CAMPANHA */}
+      <div
+        className="campanha-pix"
+        style={{
+          backgroundColor: "#111",
+          border: "2px solid #FFD700",
+          padding: "20px",
+          borderRadius: "8px",
+          textAlign: "center",
+          margin: "20px auto",
+          maxWidth: "800px",
+          color: "#fff",
+          boxShadow: "0 4px 15px rgba(255, 215, 0, 0.2)",
+        }}
+      >
+        <h2
+          style={{
+            color: "#FFD700",
+            marginBottom: "10px",
+            textTransform: "uppercase",
+          }}
+        >
+          🏟️ Campanha: A Massa Compra a SAF
+        </h2>
+        <p style={{ fontSize: "1.1rem", marginBottom: "15px" }}>
+          Se o problema é dinheiro, a torcida resolve. Nossa meta é R$ 1 Bilhão
+          para devolver o Galo ao povo!
+        </p>
+
+        <div
+          style={{
+            backgroundColor: "#222",
+            padding: "15px",
+            borderRadius: "8px",
+            border: "1px dashed #666",
+          }}
+        >
+          <p
+            style={{
+              fontWeight: "bold",
+              color: "#FF4444",
+              marginBottom: "10px",
+            }}
+          >
+            ⚠️ ATENÇÃO: PROTESTO SOLIDÁRIO
+          </p>
+          <p style={{ fontSize: "0.95rem", marginBottom: "15px" }}>
+            Como não podemos (ainda) comprar o clube, todo o valor arrecadado
+            neste protesto vai direto para quem precisa de verdade, enquanto
+            aguardamos promessas virarem realidade.
+          </p>
+          <div
+            style={{
+              background: "#fff",
+              color: "#000",
+              padding: "10px",
+              borderRadius: "5px",
+              display: "inline-block",
+            }}
+          >
+            <p style={{ margin: 0, fontWeight: "bold" }}>
+              PIX DIRETO - HOSPITAL DA BALEIA (BH):
+            </p>
+            <code
+              style={{ fontSize: "1.2rem", color: "#000", fontWeight: "bold" }}
+            >
+              pix@hospitaldabaleia.org.br
+            </code>
+          </div>
+        </div>
+      </div>
+
       <div className="split-container">
-        {/* LADO ESQUERDO */}
+        {/* LADO ESQUERDO: RAFAEL MENIN */}
         <div className="split-side side-left">
           <div
-            className={`card ${flipRafael ? "is-flipped" : ""}`}
-            onClick={() => setFlipRafael(!flipRafael)}
+            className="card-estatico"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.9)), url(/rosto-rafael.jpg)",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              borderRadius: "10px",
+              padding: "40px 20px",
+              color: "#fff",
+              boxShadow: "0 4px 10px rgba(0,0,0,0.5)",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end", // <--- ALTERADO: Desce o nome para o rodapé da foto
+              alignItems: "center",
+              textAlign: "center",
+            }}
           >
-            <div className="card-inner">
-              <div
-                className="card-face card-front"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)), url(/rosto-rafael.jpg)",
-                }}
-              >
-                <div className="sobreposicao-texto">
-                  <h2>Rafael Menin</h2>
-                  <p>Investidor / Operação</p>
-                  <button className="btn-expor">CLIQUE PARA EXPOR</button>
-                </div>
-              </div>
-              <div className="card-face card-back">
-                <h3>A Realidade</h3>
-                <ul className="mentiras-lista">
-                  <li>
-                    <strong>Time Protagonista:</strong> <span>Fato:</span>{" "}
-                    Desmanches recorrentes do elenco.
-                  </li>
-                  <li>
-                    <strong>Gestão Profissional:</strong> <span>Fato:</span>{" "}
-                    Decisões questionáveis e falta de transparência.
-                  </li>
-                </ul>
-              </div>
-            </div>
+            <h2
+              style={{
+                fontSize: "2.5rem",
+                margin: "0 0 10px 0",
+                textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+              }}
+            >
+              Rafael Menin
+            </h2>
+            <p
+              style={{
+                color: "#FF4444",
+                fontWeight: "bold",
+                textTransform: "uppercase",
+                fontSize: "1.3rem",
+                margin: 0,
+                textShadow: "1px 1px 3px rgba(0,0,0,0.8)",
+              }}
+            >
+              Dono
+            </p>
           </div>
         </div>
 
-        {/* LADO DIREITO */}
+        {/* LADO DIREITO: RUBENS MENIN */}
         <div className="split-side side-right">
           <div
-            className={`card ${flipRubens ? "is-flipped" : ""}`}
-            onClick={() => setFlipRubens(!flipRubens)}
+            className="card-estatico"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.9)), url(/rosto-rubens.jpg)",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              borderRadius: "10px",
+              padding: "40px 20px",
+              color: "#fff",
+              boxShadow: "0 4px 10px rgba(0,0,0,0.5)",
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-end", // <--- ALTERADO: Desce o nome para o rodapé da foto
+              alignItems: "center",
+              textAlign: "center",
+            }}
           >
-            <div className="card-inner">
-              <div
-                className="card-face card-front"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)), url(/rosto-rubens.jpg)",
-                }}
-              >
-                <div className="sobreposicao-texto">
-                  <h2>Rubens Menin</h2>
-                  <p>Investidor / Galo Holding</p>
-                  <button className="btn-expor">CLIQUE PARA EXPOR</button>
-                </div>
-              </div>
-              <div className="card-face card-back">
-                <h3>A Realidade</h3>
-                <ul className="mentiras-lista">
-                  <li>
-                    <strong>Dívida Equacionada:</strong> <span>Fato:</span>{" "}
-                    Patrimônio entregue e dívida sangrando o clube.
-                  </li>
-                  <li>
-                    <strong>Arena MRV:</strong> <span>Fato:</span> Ingressos
-                    caros que expulsaram o povão.
-                  </li>
-                </ul>
-              </div>
-            </div>
+            <h2
+              style={{
+                fontSize: "2.5rem",
+                margin: "0 0 10px 0",
+                textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
+              }}
+            >
+              Rubens Menin
+            </h2>
+            <p
+              style={{
+                color: "#FF4444",
+                fontWeight: "bold",
+                textTransform: "uppercase",
+                fontSize: "1.3rem",
+                margin: 0,
+                textShadow: "1px 1px 3px rgba(0,0,0,0.8)",
+              }}
+            >
+              Dono
+            </p>
           </div>
         </div>
       </div>
@@ -205,6 +290,32 @@ export default function App() {
           </form>
         </div>
       </section>
+
+      {/* RODAPÉ / AVISO LEGAL */}
+      <footer
+        style={{
+          marginTop: "50px",
+          padding: "20px",
+          backgroundColor: "#000",
+          borderTop: "1px solid #333",
+          textAlign: "center",
+          color: "#888",
+          fontSize: "0.8rem",
+        }}
+      >
+        <p style={{ marginBottom: "10px" }}>
+          <strong>Galo do Povo</strong> © {new Date().getFullYear()} - O Dossiê
+          da Massa.
+        </p>
+        <p style={{ maxWidth: "800px", margin: "0 auto", lineHeight: "1.4" }}>
+          Este site é uma iniciativa independente e pacífica de torcedores. Não
+          possui nenhum vínculo oficial com o Clube Atlético Mineiro,
+          Associação, SAF ou seus investidores. Todo o conteúdo é baseado em
+          declarações públicas e links de veículos de imprensa, exercendo o
+          direito constitucional à liberdade de expressão, opinião e crítica
+          (Art. 5º, incisos IV e IX da Constituição Federal).
+        </p>
+      </footer>
     </div>
   );
 }
