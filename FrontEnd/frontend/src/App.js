@@ -12,6 +12,14 @@ export default function App() {
   });
 
   useEffect(() => {
+    // 1. Força a página a ir para o topo absoluto
+    window.scrollTo(0, 0);
+
+    // 2. Proíbe o navegador de tentar lembrar a posição da rolagem
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+
     fetch("https://galodopovo-api.onrender.com/api/materias")
       .then((res) => res.json())
       .then((data) => setMaterias(data))
@@ -266,89 +274,102 @@ export default function App() {
       </div>
 
       {/* Dossiê */}
-      {materias.map((m) => (
-        <div
-          id={m.link ? m.link.substring(1) : ""}
-          key={m.id}
-          className="materia-item"
-          style={{
-            position: "relative",
-            display: "flex", // Faz o card ser um flexbox
-            flexDirection: "column", // Empilha os elementos (título, texto, rodapé)
-            paddingBottom: "20px", // Garante espaço para o rodapé
-          }}
-        >
-          {/* O Card agora começa direto com o título (Sem cabeçalho!) */}
-          <h2>{m.titulo}</h2>
+      {materias.length > 0 && (
+        <section className="materias-section">
+          <h2 className="titulo-secao">O Dossiê Completo</h2>
+          {materias.map((m) => (
+            <div
+              id={m.link ? m.link.substring(1) : ""}
+              key={m.id}
+              className="materia-item"
+              style={{
+                position: "relative",
+                display: "flex", // Faz o card ser um flexbox
+                flexDirection: "column", // Empilha os elementos (título, texto, rodapé)
+                paddingBottom: "20px", // Garante espaço para o rodapé
+              }}
+            >
+              {/* O Card agora começa direto com o título (Sem cabeçalho!) */}
+              <h2>{m.titulo}</h2>
 
-          {/* O conteúdo principal usa flex: 1 para empurrar o rodapé para baixo */}
-          <p style={{ flex: 1, marginBottom: "20px" }}>{m.conteudo}</p>
+              {/* O conteúdo principal usa flex: 1 para empurrar o rodapé para baixo */}
+              <p style={{ flex: 1, marginBottom: "20px" }}>{m.conteudo}</p>
 
-          {/* --- NOVO RODAPÉ SUTIL INTEGRADO --- */}
-          <div
-            style={{
-              marginTop: "auto", // Empurra esta div para o final do card
-              paddingTop: "15px",
-              borderTop: "1px solid #333",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "10px",
-              width: "100%",
-            }}
-          >
-            {/* Lógica condicional dentro do rodapé sutil */}
-            {m.fonteNome === "Pulguinha (Bot)" ? (
-              // Texto sutil para o Bot (Pulguinha)
+              {/* --- NOVO RODAPÉ SUTIL INTEGRADO --- */}
               <div
-                style={{ display: "flex", alignItems: "center", gap: "5px" }}
-              >
-                <span style={{ fontSize: "1.2rem" }}>🤖</span>
-                <span style={{ color: "#ccc", fontSize: "0.8rem" }}>
-                  Vigiado por Pulguinha
-                </span>
-              </div>
-            ) : (
-              // Texto sutil para matéria Exclusiva (Massa)
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "5px" }}
-              >
-                <span style={{ fontSize: "1.2rem" }}>📄</span>
-                <span style={{ color: "#ccc", fontSize: "0.8rem" }}>
-                  Apuração Exclusiva (Massa)
-                </span>
-              </div>
-            )}
-
-            {/* Botão de Fonte (Sempre sutil) */}
-            {m.fonteUrl && (
-              <a
-                href={m.fonteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-fonte"
                 style={{
-                  display: "inline-flex",
+                  marginTop: "auto", // Empurra esta div para o final do card
+                  paddingTop: "15px",
+                  borderTop: "1px solid #333",
+                  display: "flex",
                   alignItems: "center",
-                  gap: "5px",
-                  fontSize: "0.85rem",
-                  padding: "5px 10px",
-                  border: "1px solid #444",
-                  borderRadius: "4px",
-                  backgroundColor: "#111",
-                  color: "#fff",
-                  textDecoration: "none",
+                  justifyContent: "space-between",
+                  gap: "10px",
+                  width: "100%",
                 }}
               >
-                {m.fonteNome === "Pulguinha (Bot)"
-                  ? "🔗 Ver Matéria Completa"
-                  : `Fonte: ${m.fonteNome}`}
-              </a>
-            )}
-          </div>
-          {/* ----------------------------------- */}
-        </div>
-      ))}
+                {/* Lógica condicional dentro do rodapé sutil */}
+                {m.fonteNome === "Pulguinha (Bot)" ? (
+                  // Texto sutil para o Bot (Pulguinha)
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
+                    }}
+                  >
+                    <span style={{ fontSize: "1.2rem" }}>🤖</span>
+                    <span style={{ color: "#ccc", fontSize: "0.8rem" }}>
+                      Vigiado por Pulguinha
+                    </span>
+                  </div>
+                ) : (
+                  // Texto sutil para matéria Exclusiva (Massa)
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
+                    }}
+                  >
+                    <span style={{ fontSize: "1.2rem" }}>📄</span>
+                    <span style={{ color: "#ccc", fontSize: "0.8rem" }}>
+                      Apuração Exclusiva (Massa)
+                    </span>
+                  </div>
+                )}
+
+                {/* Botão de Fonte (Sempre sutil) */}
+                {m.fonteUrl && (
+                  <a
+                    href={m.fonteUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-fonte"
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      fontSize: "0.85rem",
+                      padding: "5px 10px",
+                      border: "1px solid #444",
+                      borderRadius: "4px",
+                      backgroundColor: "#111",
+                      color: "#fff",
+                      textDecoration: "none",
+                    }}
+                  >
+                    {m.fonteNome === "Pulguinha (Bot)"
+                      ? "🔗 Ver Matéria Completa"
+                      : `Fonte: ${m.fonteNome}`}
+                  </a>
+                )}
+              </div>
+              {/* ----------------------------------- */}
+            </div>
+          ))}
+        </section>
+      )}
 
       {/* Seção de Contato Direto */}
       <section className="form-section">
