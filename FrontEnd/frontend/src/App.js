@@ -334,7 +334,6 @@ export default function App() {
                   >
                     <span style={{ fontSize: "1.2rem" }}>📄</span>
                     <span style={{ color: "#ccc", fontSize: "0.8rem" }}>
-                      Apuração Exclusiva (Massa)
                     </span>
                   </div>
                 )}

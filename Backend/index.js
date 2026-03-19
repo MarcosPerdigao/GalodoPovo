@@ -2,16 +2,36 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const nodemailer = require("nodemailer");
-const Parser = require("rss-parser"); // <-- O Bot Leitor
-const cron = require("node-cron"); // <-- O Relógio
+const Parser = require("rss-parser");
+const cron = require("node-cron");
+const mongoose = require("mongoose"); // A ferramenta do banco de dados
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 // ----------------------------------------------------
-// SEU BANCO DE DADOS MANUAL E AUTOMÁTICO
+// 📦 CONEXÃO COM O COFRE DA MASSA (MONGODB)
 // ----------------------------------------------------
+mongoose
+  .connect(process.env.MONGODB_URI)
+  .then(() => console.log("📦 Cofre da Massa (MongoDB) Conectado com Sucesso!"))
+  .catch((err) => console.error("❌ Erro ao conectar no Cofre:", err));
+
+// Cria o "Molde" de como uma matéria deve ser salva no banco
+const materiaSchema = new mongoose.Schema({
+  titulo: String,
+  conteudo: String,
+  link: String,
+  fonteNome: String,
+  fonteUrl: String,
+  dataCriacao: { type: Date, default: Date.now }, // Guarda a data exata que o Pulguinha achou
+});
+
+// Cria a tabela "Materia" no banco
+const Materia = mongoose.model("Materia", materiaSchema);
+
+// O Contador continua na memória por enquanto para ser fácil de você editar
 let dadosContador = {
   dias: 1000,
   mentiras: 13,
@@ -19,107 +39,98 @@ let dadosContador = {
   valorArrecadado: 250,
 };
 
-// Aqui ficam as suas matérias manuais (se quiser adicionar alguma fixa) e as automáticas vão entrar aqui também
-let materias = [
-  {
-    id: 1,
-    titulo: "A Mentira da Dívida",
-    conteudo:
-      "Prometeram zerar a dívida com a venda do Diamond, mas a dívida só aumentou...",
-    link: "#divida",
-    fonteNome: "Dossiê da Massa",
-    fonteUrl: "",
-  },
-];
-
 // ----------------------------------------------------
 // O ROBÔ "VIGIA DA MASSA" (Bot de Notícias)
 // ----------------------------------------------------
-const parser = new Parser();
+const parser = new Parser({
+  headers: {
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  },
+});
 
-// Links RSS dos portais escolhidos
 const fontesRSS = [
   {
     nome: "GE.globo",
     url: "https://ge.globo.com/rss/futebol/times/atletico-mg/",
   },
   { nome: "FalaGalo", url: "https://falagalo.com.br/feed/" },
-  // Nota: Alguns sites como Itatiaia e O Tempo mudam o link do RSS constantemente,
-  // esses abaixo são os padrões usados por sites de notícias.
-  { nome: "O Tempo", url: "https://www.otempo.com.br/rss/superfc/atletico" },
+  {
+    nome: "Google News",
+    url: "https://news.google.com/rss/search?q=atletico+mg+saf&hl=pt-BR&gl=BR&ceid=BR:pt-419",
+  },
 ];
 
 async function buscarNoticiasAutomaticas() {
-  console.log("🤖 Vigia da Massa: Buscando novas notícias...");
-
-  let novasMaterias = [];
+  console.log("🤖 Pulguinha Historiador: Buscando notícias...");
+  let contadorNovas = 0;
 
   for (const fonte of fontesRSS) {
     try {
       const feed = await parser.parseURL(fonte.url);
+      const ultimasNoticias = feed.items.slice(0, 10);
 
-      // Pega apenas as 2 últimas notícias de cada site para não poluir demais
-      const ultimasNoticias = feed.items.slice(0, 2);
-
-      ultimasNoticias.forEach((item) => {
-        // Filtro básico de palavras-chave para focar no que importa
-        const texto = (
+      for (const item of ultimasNoticias) {
+        const textoOriginal = (
           item.title +
           " " +
           (item.contentSnippet || "")
         ).toLowerCase();
+        const textoSemAcento = textoOriginal
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
 
-        // Só adiciona se falar de Galo, SAF, Menin, etc (Evita notícias de outros times)
-        if (
-          texto.includes("saf") ||
-          texto.includes("menin") ||
-          texto.includes("dívida") ||
-          texto.includes("atlético") ||
-          texto.includes("galo")
-        ) {
-          // Verifica se a matéria já não está na nossa lista para não duplicar
-          const jaExiste = materias.some((m) => m.titulo === item.title);
+        const palavrasChave = [
+          "saf",
+          "menin",
+          "divida",
+          "atletico",
+          "galo",
+          "arena mrv",
+          "bracks",
+          "milhoes",
+        ];
+        const temPalavraChave = palavrasChave.some((palavra) =>
+          textoSemAcento.includes(palavra),
+        );
 
-          if (!jaExiste) {
-            novasMaterias.push({
-              id: Date.now() + Math.random(),
+        if (temPalavraChave) {
+          // 🔎 PROCURA NO BANCO DE DADOS: Já temos essa matéria?
+          const existe = await Materia.findOne({ titulo: item.title });
+
+          if (!existe) {
+            // 💾 SALVA NO BANCO DE DADOS
+            await Materia.create({
               titulo: item.title,
               conteudo: item.contentSnippet
-                ? item.contentSnippet.substring(0, 150) + "..."
+                ? item.contentSnippet.substring(0, 180) + "..."
                 : "Confira a matéria completa no link abaixo.",
               link: "#",
-              // --- ISSO É IMPORTANTE PARA O FRONTEND SABER QUEM É QUEM ---
-              fonteNome: "Pulguinha (Bot)", // O bot assina
-              fonteUrl: item.link, // Guarda o link original
-              // -----------------------------------------------------------
+              fonteNome: "Pulguinha (Bot)",
+              fonteUrl: item.link,
             });
+            contadorNovas++;
           }
         }
-      });
+      }
     } catch (error) {
-      console.log(
-        `❌ Erro ao buscar notícias de ${fonte.nome}:`,
-        error.message,
-      );
+      console.log(`❌ Erro ao buscar de ${fonte.nome}:`, error.message);
     }
   }
 
-  if (novasMaterias.length > 0) {
-    // Adiciona as novas matérias no topo da lista
-    materias = [...novasMaterias, ...materias];
+  if (contadorNovas > 0) {
     console.log(
-      `✅ ${novasMaterias.length} novas matérias adicionadas ao Dossiê!`,
+      `✅ ${contadorNovas} novas matérias guardadas no cofre eterno!`,
     );
   } else {
     console.log("Nada de novo no radar da SAF.");
   }
 }
 
-// Configura o relógio para rodar o Bot a cada 1 hora (minuto 0)
+// Configura o relógio para rodar o Bot a cada 1 hora
 cron.schedule("0 * * * *", () => {
   buscarNoticiasAutomaticas();
 });
-
 // Roda o bot uma vez assim que o servidor liga
 buscarNoticiasAutomaticas();
 
@@ -130,8 +141,17 @@ app.get("/api/contador", (req, res) => {
   res.json(dadosContador);
 });
 
-app.get("/api/materias", (req, res) => {
-  res.json(materias);
+app.get("/api/materias", async (req, res) => {
+  try {
+    // Busca as matérias do banco, da mais nova pra mais velha (limite de 100 para não travar o celular do usuário)
+    const listaMaterias = await Materia.find()
+      .sort({ dataCriacao: -1 })
+      .limit(100);
+    res.json(listaMaterias);
+  } catch (error) {
+    console.error("Erro ao buscar matérias:", error);
+    res.status(500).json([]);
+  }
 });
 
 // Configuração do E-mail
@@ -151,22 +171,18 @@ const transporter = nodemailer.createTransport({
 
 app.post("/api/sugestoes", async (req, res) => {
   const { nome, email, mensagem } = req.body;
-
   const mailOptions = {
     from: "galodopovo13@gmail.com",
     to: "galodopovo13@gmail.com",
     subject: "⚠️ DOSSIÊ OU COMPROVANTE: Galo do Povo",
     text: `Nome: ${nome}\nE-mail: ${email}\n\nMensagem / Link do Comprovante:\n${mensagem}`,
   };
-
   try {
     await transporter.sendMail(mailOptions);
-    console.log("✅ E-mail enviado com sucesso!");
     return res
       .status(200)
       .json({ success: true, message: "Recebido! A Massa agradece." });
   } catch (error) {
-    console.error("❌ Erro ao enviar e-mail:", error);
     return res
       .status(500)
       .json({ success: false, message: "Erro ao enviar. Tente novamente." });
