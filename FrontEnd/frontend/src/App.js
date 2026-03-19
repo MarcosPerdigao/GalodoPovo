@@ -331,11 +331,7 @@ export default function App() {
                       alignItems: "center",
                       gap: "5px",
                     }}
-                  >
-                    <span style={{ fontSize: "1.2rem" }}>📄</span>
-                    <span style={{ color: "#ccc", fontSize: "0.8rem" }}>
-                    </span>
-                  </div>
+                  ></div>
                 )}
 
                 {/* Botão de Fonte (Sempre sutil) */}
