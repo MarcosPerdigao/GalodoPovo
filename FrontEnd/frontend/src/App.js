@@ -11,11 +11,14 @@ export default function App() {
     valorArrecadado: 0,
   });
 
+  // --- NOVOS ESTADOS PARA BUSCA E PAGINAÇÃO ---
+  const [termoBusca, setTermoBusca] = useState("");
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const ITENS_POR_PAGINA = 10; // Quantas matérias aparecem por página
+
   useEffect(() => {
-    // 1. Força a página a ir para o topo absoluto
     window.scrollTo(0, 0);
 
-    // 2. Proíbe o navegador de tentar lembrar a posição da rolagem
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
@@ -31,9 +34,31 @@ export default function App() {
       .catch((err) => console.error(err));
   }, []);
 
+  // --- LÓGICA DE FILTRO (CAIXA DE PESQUISA) ---
+  const materiasFiltradas = materias.filter((m) => {
+    const termo = termoBusca.toLowerCase();
+    const titulo = m.titulo ? m.titulo.toLowerCase() : "";
+    const conteudo = m.conteudo ? m.conteudo.toLowerCase() : "";
+    return titulo.includes(termo) || conteudo.includes(termo);
+  });
+
+  // --- LÓGICA DE PAGINAÇÃO ---
+  // Sempre que o usuário digitar algo na busca, volta para a página 1
+  useEffect(() => {
+    setPaginaAtual(1);
+  }, [termoBusca]);
+
+  const totalPaginas = Math.ceil(materiasFiltradas.length / ITENS_POR_PAGINA);
+  const indexUltimoItem = paginaAtual * ITENS_POR_PAGINA;
+  const indexPrimeiroItem = indexUltimoItem - ITENS_POR_PAGINA;
+  // Recorta o array de matérias para mostrar só as da página atual
+  const materiasPaginadas = materiasFiltradas.slice(
+    indexPrimeiroItem,
+    indexUltimoItem,
+  );
+
   // --- MATEMÁTICA DA BARRA DE PROGRESSO ---
   const META_CAMPANHA = 13000;
-  // Calcula a porcentagem (se passar de 100%, trava em 100 para não quebrar o layout)
   const progresso = Math.min(
     (contador.valorArrecadado / META_CAMPANHA) * 100,
     100,
@@ -89,7 +114,6 @@ export default function App() {
           retomada!
         </p>
 
-        {/* BARRA DE PROGRESSO DINÂMICA */}
         <div
           style={{
             width: "100%",
@@ -110,7 +134,6 @@ export default function App() {
               transition: "width 1s ease-in-out",
             }}
           ></div>
-          {/* Texto em cima da barra */}
           <span
             style={{
               position: "absolute",
@@ -273,32 +296,56 @@ export default function App() {
         </div>
       </div>
 
-      {/* Dossiê */}
-      {materias.length > 0 && (
-        <section className="materias-section">
-          <h2 className="titulo-secao">O Dossiê Completo</h2>
-          {materias.map((m) => (
+      {/* SEÇÃO DO DOSSIÊ (COM BUSCA E PAGINAÇÃO) */}
+      <section className="materias-section">
+        <h2 className="titulo-secao">O Dossiê Completo</h2>
+
+        {/* --- CAIXA DE PESQUISA --- */}
+        <div
+          style={{
+            maxWidth: "800px",
+            margin: "0 auto 30px auto",
+            textAlign: "center",
+          }}
+        >
+          <input
+            type="text"
+            placeholder="🔍 Pesquisar no Dossiê (ex: dívida, arena, jogador...)"
+            value={termoBusca}
+            onChange={(e) => setTermoBusca(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "15px",
+              fontSize: "1rem",
+              borderRadius: "8px",
+              border: "1px solid #444",
+              backgroundColor: "#111",
+              color: "#fff",
+              outline: "none",
+            }}
+          />
+        </div>
+
+        {/* Renderiza as matérias paginadas */}
+        {materiasPaginadas.length > 0 ? (
+          materiasPaginadas.map((m) => (
             <div
               id={m.link ? m.link.substring(1) : ""}
               key={m.id}
               className="materia-item"
               style={{
                 position: "relative",
-                display: "flex", // Faz o card ser um flexbox
-                flexDirection: "column", // Empilha os elementos (título, texto, rodapé)
-                paddingBottom: "20px", // Garante espaço para o rodapé
+                display: "flex",
+                flexDirection: "column",
+                paddingBottom: "20px",
               }}
             >
-              {/* O Card agora começa direto com o título (Sem cabeçalho!) */}
               <h2>{m.titulo}</h2>
-
-              {/* O conteúdo principal usa flex: 1 para empurrar o rodapé para baixo */}
               <p style={{ flex: 1, marginBottom: "20px" }}>{m.conteudo}</p>
 
-              {/* --- NOVO RODAPÉ SUTIL INTEGRADO --- */}
               <div
                 style={{
-                  marginTop: "auto", // Empurra esta div para o final do card
+                  marginTop: "auto",
                   paddingTop: "15px",
                   borderTop: "1px solid #333",
                   display: "flex",
@@ -308,9 +355,7 @@ export default function App() {
                   width: "100%",
                 }}
               >
-                {/* Lógica condicional dentro do rodapé sutil */}
                 {m.fonteNome === "Pulguinha (Bot)" ? (
-                  // Texto sutil para o Bot (Pulguinha)
                   <div
                     style={{
                       display: "flex",
@@ -324,17 +369,20 @@ export default function App() {
                     </span>
                   </div>
                 ) : (
-                  // Texto sutil para matéria Exclusiva (Massa)
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
                       gap: "5px",
                     }}
-                  ></div>
+                  >
+                    <span style={{ fontSize: "1.2rem" }}>📄</span>
+                    <span style={{ color: "#ccc", fontSize: "0.8rem" }}>
+                      Apuração Exclusiva (Massa)
+                    </span>
+                  </div>
                 )}
 
-                {/* Botão de Fonte (Sempre sutil) */}
                 {m.fonteUrl && (
                   <a
                     href={m.fonteUrl}
@@ -360,11 +408,65 @@ export default function App() {
                   </a>
                 )}
               </div>
-              {/* ----------------------------------- */}
             </div>
-          ))}
-        </section>
-      )}
+          ))
+        ) : (
+          <p style={{ textAlign: "center", color: "#888", fontSize: "1.1rem" }}>
+            Nenhuma matéria encontrada com esse termo.
+          </p>
+        )}
+
+        {/* --- CONTROLES DA PAGINAÇÃO --- */}
+        {totalPaginas > 1 && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "15px",
+              marginTop: "30px",
+            }}
+          >
+            <button
+              onClick={() => setPaginaAtual(paginaAtual - 1)}
+              disabled={paginaAtual === 1}
+              style={{
+                padding: "10px 15px",
+                backgroundColor: paginaAtual === 1 ? "#222" : "#FFD700",
+                color: paginaAtual === 1 ? "#666" : "#000",
+                border: "none",
+                borderRadius: "5px",
+                fontWeight: "bold",
+                cursor: paginaAtual === 1 ? "not-allowed" : "pointer",
+              }}
+            >
+              ◀ Anterior
+            </button>
+
+            <span style={{ color: "#fff", fontWeight: "bold" }}>
+              Página {paginaAtual} de {totalPaginas}
+            </span>
+
+            <button
+              onClick={() => setPaginaAtual(paginaAtual + 1)}
+              disabled={paginaAtual === totalPaginas}
+              style={{
+                padding: "10px 15px",
+                backgroundColor:
+                  paginaAtual === totalPaginas ? "#222" : "#FFD700",
+                color: paginaAtual === totalPaginas ? "#666" : "#000",
+                border: "none",
+                borderRadius: "5px",
+                fontWeight: "bold",
+                cursor:
+                  paginaAtual === totalPaginas ? "not-allowed" : "pointer",
+              }}
+            >
+              Próxima ▶
+            </button>
+          </div>
+        )}
+      </section>
 
       {/* Seção de Contato Direto */}
       <section className="form-section">
@@ -375,7 +477,6 @@ export default function App() {
             links de matérias exclusivas ou o comprovante da sua doação para
             atualizarmos o contador. Sigilo absoluto.
           </p>
-
           <div
             style={{
               backgroundColor: "#222",
