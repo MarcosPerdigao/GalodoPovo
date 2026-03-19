@@ -88,11 +88,10 @@ async function buscarNoticiasAutomaticas() {
                 ? item.contentSnippet.substring(0, 150) + "..."
                 : "Confira a matéria completa no link abaixo.",
               link: "#",
-              // --- MUDANÇA AQUI ---
-              // Vamos usar um nome fixo para o bot e guardar a fonte original no link
-              fonteNome: "Pulguinha (Bot)",
-              fonteUrl: item.link,
-              // --------------------
+              // --- ISSO É IMPORTANTE PARA O FRONTEND SABER QUEM É QUEM ---
+              fonteNome: "Pulguinha (Bot)", // O bot assina
+              fonteUrl: item.link, // Guarda o link original
+              // -----------------------------------------------------------
             });
           }
         }

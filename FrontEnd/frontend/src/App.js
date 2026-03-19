@@ -271,103 +271,82 @@ export default function App() {
           id={m.link ? m.link.substring(1) : ""}
           key={m.id}
           className="materia-item"
-          style={{ position: "relative" }}
+          style={{
+            position: "relative",
+            display: "flex", // Faz o card ser um flexbox
+            flexDirection: "column", // Empilha os elementos (título, texto, rodapé)
+            paddingBottom: "20px", // Garante espaço para o rodapé
+          }}
         >
-          {/* --- SISTEMA DE IDENTIFICAÇÃO DO PULGUINHA --- */}
-          {m.fonteNome === "Pulguinha (Bot)" ? (
-            // Estilo para matéria do Robô
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                marginBottom: "10px",
-                backgroundColor: "#1a1a1a",
-                padding: "5px 10px",
-                borderRadius: "5px",
-                border: "1px solid #333",
-              }}
-            >
-              <span style={{ fontSize: "1.5rem", marginRight: "10px" }}>
-                🤖
-              </span>
-              <div>
-                <span
-                  style={{
-                    color: "#FFD700",
-                    fontWeight: "bold",
-                    textTransform: "uppercase",
-                    fontSize: "0.8rem",
-                    display: "block",
-                  }}
-                >
-                  Rastreio Automático
-                </span>
-                <span style={{ color: "#fff", fontSize: "0.9rem" }}>
-                  Apuração do **Pulguinha**
+          {/* O Card agora começa direto com o título (Sem cabeçalho!) */}
+          <h2>{m.titulo}</h2>
+
+          {/* O conteúdo principal usa flex: 1 para empurrar o rodapé para baixo */}
+          <p style={{ flex: 1, marginBottom: "20px" }}>{m.conteudo}</p>
+
+          {/* --- NOVO RODAPÉ SUTIL INTEGRADO --- */}
+          <div
+            style={{
+              marginTop: "auto", // Empurra esta div para o final do card
+              paddingTop: "15px",
+              borderTop: "1px solid #333",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "10px",
+              width: "100%",
+            }}
+          >
+            {/* Lógica condicional dentro do rodapé sutil */}
+            {m.fonteNome === "Pulguinha (Bot)" ? (
+              // Texto sutil para o Bot (Pulguinha)
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "5px" }}
+              >
+                <span style={{ fontSize: "1.2rem" }}>🤖</span>
+                <span style={{ color: "#ccc", fontSize: "0.8rem" }}>
+                  Vigiado por Pulguinha
                 </span>
               </div>
-            </div>
-          ) : (
-            // Estilo para matéria Fixa/Manual
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                marginBottom: "10px",
-                backgroundColor: "#fff",
-                padding: "5px 10px",
-                borderRadius: "5px",
-              }}
-            >
-              <span
+            ) : (
+              // Texto sutil para matéria Exclusiva (Massa)
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "5px" }}
+              >
+                <span style={{ fontSize: "1.2rem" }}>📄</span>
+                <span style={{ color: "#ccc", fontSize: "0.8rem" }}>
+                  Apuração Exclusiva (Massa)
+                </span>
+              </div>
+            )}
+
+            {/* Botão de Fonte (Sempre sutil) */}
+            {m.fonteUrl && (
+              <a
+                href={m.fonteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-fonte"
                 style={{
-                  fontSize: "1.5rem",
-                  marginRight: "10px",
-                  color: "#000",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  fontSize: "0.85rem",
+                  padding: "5px 10px",
+                  border: "1px solid #444",
+                  borderRadius: "4px",
+                  backgroundColor: "#111",
+                  color: "#fff",
+                  textDecoration: "none",
                 }}
               >
-                📄
-              </span>
-              <div>
-                <span
-                  style={{
-                    color: "#f44",
-                    fontWeight: "bold",
-                    textTransform: "uppercase",
-                    fontSize: "0.8rem",
-                    display: "block",
-                  }}
-                >
-                  Dossiê Exclusivo
-                </span>
-                <span style={{ color: "#000", fontSize: "0.9rem" }}>
-                  Apuração da **Massa**
-                </span>
-              </div>
-            </div>
-          )}
-          {/* ------------------------------------------- */}
-
-          <h2 style={{ marginTop: "10px" }}>{m.titulo}</h2>
-          <p>{m.conteudo}</p>
-
-          {m.fonteUrl && (
-            <a
-              href={m.fonteUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-fonte"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "5px",
-              }}
-            >
-              {m.fonteNome === "Pulguinha (Bot)"
-                ? "🔗 Ver matéria completa"
-                : `Fonte: ${m.fonteNome}`}
-            </a>
-          )}
+                {m.fonteNome === "Pulguinha (Bot)"
+                  ? "🔗 Ver Matéria Completa"
+                  : `Fonte: ${m.fonteNome}`}
+              </a>
+            )}
+          </div>
+          {/* ----------------------------------- */}
         </div>
       ))}
 
