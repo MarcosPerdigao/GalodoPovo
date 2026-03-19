@@ -266,31 +266,110 @@ export default function App() {
       </div>
 
       {/* Dossiê */}
-      {materias.length > 0 && (
-        <section className="materias-section">
-          <h2 className="titulo-secao">O Dossiê Completo</h2>
-          {materias.map((m) => (
+      {materias.map((m) => (
+        <div
+          id={m.link ? m.link.substring(1) : ""}
+          key={m.id}
+          className="materia-item"
+          style={{ position: "relative" }}
+        >
+          {/* --- SISTEMA DE IDENTIFICAÇÃO DO PULGUINHA --- */}
+          {m.fonteNome === "Pulguinha (Bot)" ? (
+            // Estilo para matéria do Robô
             <div
-              id={m.link ? m.link.substring(1) : ""}
-              key={m.id}
-              className="materia-item"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: "10px",
+                backgroundColor: "#1a1a1a",
+                padding: "5px 10px",
+                borderRadius: "5px",
+                border: "1px solid #333",
+              }}
             >
-              <h2>{m.titulo}</h2>
-              <p>{m.conteudo}</p>
-              {m.fonteUrl && (
-                <a
-                  href={m.fonteUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-fonte"
+              <span style={{ fontSize: "1.5rem", marginRight: "10px" }}>
+                🤖
+              </span>
+              <div>
+                <span
+                  style={{
+                    color: "#FFD700",
+                    fontWeight: "bold",
+                    textTransform: "uppercase",
+                    fontSize: "0.8rem",
+                    display: "block",
+                  }}
                 >
-                  Fonte: {m.fonteNome}
-                </a>
-              )}
+                  Rastreio Automático
+                </span>
+                <span style={{ color: "#fff", fontSize: "0.9rem" }}>
+                  Apuração do **Pulguinha**
+                </span>
+              </div>
             </div>
-          ))}
-        </section>
-      )}
+          ) : (
+            // Estilo para matéria Fixa/Manual
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: "10px",
+                backgroundColor: "#fff",
+                padding: "5px 10px",
+                borderRadius: "5px",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: "1.5rem",
+                  marginRight: "10px",
+                  color: "#000",
+                }}
+              >
+                📄
+              </span>
+              <div>
+                <span
+                  style={{
+                    color: "#f44",
+                    fontWeight: "bold",
+                    textTransform: "uppercase",
+                    fontSize: "0.8rem",
+                    display: "block",
+                  }}
+                >
+                  Dossiê Exclusivo
+                </span>
+                <span style={{ color: "#000", fontSize: "0.9rem" }}>
+                  Apuração da **Massa**
+                </span>
+              </div>
+            </div>
+          )}
+          {/* ------------------------------------------- */}
+
+          <h2 style={{ marginTop: "10px" }}>{m.titulo}</h2>
+          <p>{m.conteudo}</p>
+
+          {m.fonteUrl && (
+            <a
+              href={m.fonteUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-fonte"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+              }}
+            >
+              {m.fonteNome === "Pulguinha (Bot)"
+                ? "🔗 Ver matéria completa"
+                : `Fonte: ${m.fonteNome}`}
+            </a>
+          )}
+        </div>
+      ))}
 
       {/* Seção de Contato Direto */}
       <section className="form-section">
