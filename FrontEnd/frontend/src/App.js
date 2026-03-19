@@ -8,11 +8,8 @@ export default function App() {
     dias: 0,
     mentiras: 0,
     diasTecnico: 0,
+    valorArrecadado: 0,
   });
-
-  // Estados do Formulário de Denúncia
-  const [form, setForm] = useState({ nome: "", email: "", mensagem: "" });
-  const [statusEnvio, setStatusEnvio] = useState("");
 
   useEffect(() => {
     fetch("https://galodopovo-api.onrender.com/api/materias")
@@ -26,25 +23,19 @@ export default function App() {
       .catch((err) => console.error(err));
   }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setStatusEnvio("Enviando...");
+  // --- MATEMÁTICA DA BARRA DE PROGRESSO ---
+  const META_CAMPANHA = 13000;
+  // Calcula a porcentagem (se passar de 100%, trava em 100 para não quebrar o layout)
+  const progresso = Math.min(
+    (contador.valorArrecadado / META_CAMPANHA) * 100,
+    100,
+  );
 
-    fetch("https://galodopovo-api.onrender.com/api/sugestoes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setStatusEnvio(data.message);
-        setForm({ nome: "", email: "", mensagem: "" }); // Limpa o formulário
-        setTimeout(() => setStatusEnvio(""), 5000); // Apaga a mensagem após 5s
-      })
-      .catch((err) => {
-        console.error(err);
-        setStatusEnvio("Erro ao enviar. Tente novamente.");
-      });
+  const formatarMoeda = (valor) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(valor || 0);
   };
 
   return (
@@ -60,7 +51,7 @@ export default function App() {
         </p>
       </header>
 
-      {/* BANNER DA CAMPANHA */}
+      {/* BANNER DA CAMPANHA DE 13 MIL */}
       <div
         className="campanha-pix"
         style={{
@@ -85,9 +76,49 @@ export default function App() {
           🏟️ Campanha: A Massa Compra a SAF
         </h2>
         <p style={{ fontSize: "1.1rem", marginBottom: "15px" }}>
-          Se o problema é dinheiro, a torcida resolve. Nossa meta é R$ 1 Bilhão
-          para devolver o Galo ao povo!
+          Se o problema é dinheiro, a torcida resolve. Nossa meta inicial é{" "}
+          <strong>R$ 13.000,00</strong> para mostrar a força do povo e iniciar a
+          retomada!
         </p>
+
+        {/* BARRA DE PROGRESSO DINÂMICA */}
+        <div
+          style={{
+            width: "100%",
+            backgroundColor: "#333",
+            height: "30px",
+            borderRadius: "15px",
+            margin: "20px 0",
+            overflow: "hidden",
+            border: "1px solid #444",
+            position: "relative",
+          }}
+        >
+          <div
+            style={{
+              width: `${progresso}%`,
+              backgroundColor: "#FFD700",
+              height: "100%",
+              transition: "width 1s ease-in-out",
+            }}
+          ></div>
+          {/* Texto em cima da barra */}
+          <span
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              color: progresso > 50 ? "#000" : "#fff",
+              fontWeight: "bold",
+              fontSize: "1rem",
+              textShadow: progresso > 50 ? "none" : "1px 1px 2px #000",
+            }}
+          >
+            {formatarMoeda(contador.valorArrecadado)} /{" "}
+            {formatarMoeda(META_CAMPANHA)}
+          </span>
+        </div>
 
         <div
           style={{
@@ -108,8 +139,7 @@ export default function App() {
           </p>
           <p style={{ fontSize: "0.95rem", marginBottom: "15px" }}>
             Como não podemos (ainda) comprar o clube, todo o valor arrecadado
-            neste protesto vai direto para quem precisa de verdade, enquanto
-            aguardamos promessas virarem realidade.
+            neste protesto vai direto para quem precisa de verdade.
           </p>
           <div
             style={{
@@ -129,6 +159,17 @@ export default function App() {
               pix@hospitaldabaleia.org.br
             </code>
           </div>
+          <p
+            style={{
+              fontSize: "0.85rem",
+              color: "#FFD700",
+              marginTop: "15px",
+              fontWeight: "bold",
+            }}
+          >
+            📸 Fez sua doação? Mande o comprovante para o nosso e-mail lá
+            embaixo para subirmos o nosso contador!
+          </p>
         </div>
       </div>
 
@@ -149,7 +190,7 @@ export default function App() {
               height: "100%",
               display: "flex",
               flexDirection: "column",
-              justifyContent: "flex-end", // <--- ALTERADO: Desce o nome para o rodapé da foto
+              justifyContent: "flex-end",
               alignItems: "center",
               textAlign: "center",
             }}
@@ -194,7 +235,7 @@ export default function App() {
               height: "100%",
               display: "flex",
               flexDirection: "column",
-              justifyContent: "flex-end", // <--- ALTERADO: Desce o nome para o rodapé da foto
+              justifyContent: "flex-end",
               alignItems: "center",
               textAlign: "center",
             }}
@@ -229,7 +270,11 @@ export default function App() {
         <section className="materias-section">
           <h2 className="titulo-secao">O Dossiê Completo</h2>
           {materias.map((m) => (
-            <div id={m.link.substring(1)} key={m.id} className="materia-item">
+            <div
+              id={m.link ? m.link.substring(1) : ""}
+              key={m.id}
+              className="materia-item"
+            >
               <h2>{m.titulo}</h2>
               <p>{m.conteudo}</p>
               {m.fonteUrl && (
@@ -247,47 +292,47 @@ export default function App() {
         </section>
       )}
 
-      {/* NOVO: Formulário de Denúncias */}
+      {/* Seção de Contato Direto */}
       <section className="form-section">
-        <div className="form-container">
-          <h2>Tem mais matérias ou mentiras para expor?</h2>
-          <p>
+        <div className="form-container" style={{ textAlign: "center" }}>
+          <h2>Envie sua denúncia ou o Comprovante do PIX!</h2>
+          <p style={{ marginBottom: "25px" }}>
             A diretoria tenta esconder, mas a arquibancada vê tudo. Nos envie
-            links, balanços ou denúncias para adicionarmos ao site.
+            links de matérias exclusivas ou o comprovante da sua doação para
+            atualizarmos o contador. Sigilo absoluto.
           </p>
 
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              placeholder="Seu Nome (Opcional) ou 'Anônimo'"
-              value={form.nome}
-              onChange={(e) => setForm({ ...form, nome: e.target.value })}
-              className="form-input"
-            />
-            <input
-              type="email"
-              placeholder="Seu E-mail (Opcional)"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="form-input"
-            />
-            <textarea
-              placeholder="Qual a denúncia ou link da matéria? Descreva aqui..."
-              required
-              rows="5"
-              value={form.mensagem}
-              onChange={(e) => setForm({ ...form, mensagem: e.target.value })}
-              className="form-input"
-            ></textarea>
-
-            <button type="submit" className="btn-enviar">
-              Enviar Denúncia
-            </button>
-
-            {statusEnvio && (
-              <div className="status-mensagem">{statusEnvio}</div>
-            )}
-          </form>
+          <div
+            style={{
+              backgroundColor: "#222",
+              padding: "20px",
+              borderRadius: "8px",
+              display: "inline-block",
+              border: "1px solid #444",
+              boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+            }}
+          >
+            <p
+              style={{
+                fontSize: "1.1rem",
+                margin: "0 0 10px 0",
+                color: "#ccc",
+              }}
+            >
+              📧 Fale direto com a moderação:
+            </p>
+            <a
+              href="mailto:galodopovo13@gmail.com"
+              style={{
+                fontSize: "1.4rem",
+                color: "#FFD700",
+                fontWeight: "bold",
+                textDecoration: "none",
+              }}
+            >
+              galodopovo13@gmail.com
+            </a>
+          </div>
         </div>
       </section>
 
