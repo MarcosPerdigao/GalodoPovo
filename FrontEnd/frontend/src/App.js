@@ -5,13 +5,23 @@ export default function App() {
   const [materias, setMaterias] = useState([]);
   const [contador, setContador] = useState({
     dias: 0,
-    mentiras: 0,
     diasTecnico: 0,
   });
 
   const [termoBusca, setTermoBusca] = useState("");
   const [paginaAtual, setPaginaAtual] = useState(1);
+  const [modalAberto, setModalAberto] = useState(false);
   const ITENS_POR_PAGINA = 10;
+
+  const listaPromessas = [
+    "A Arena MRV será inaugurada 100% paga e sem gerar dívidas para o clube.",
+    "O Galo terá um elenco protagonista e disputará todos os títulos de igual para igual.",
+    "A gestão da SAF será pautada pela transparência total com o torcedor.",
+    "A dívida global do clube será reduzida drasticamente já no primeiro ano.",
+    "O patrimônio da Associação (Vila Olímpica, Labareda) não será usado para cobrir rombos da SAF.",
+    "Os preços dos ingressos serão populares e acessíveis para a verdadeira Massa Atleticana.",
+    "O departamento de futebol terá autonomia técnica sem interferência direta dos investidores.",
+  ];
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -50,20 +60,139 @@ export default function App() {
     indexUltimoItem,
   );
 
+  // 👇 NOVA FUNÇÃO: Muda a página e sobe a tela suavemente 👇
+  const mudarPaginaESubir = (novaPagina) => {
+    setPaginaAtual(novaPagina);
+    const secaoDossie = document.getElementById("inicio-dossie");
+    if (secaoDossie) {
+      secaoDossie.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <div>
       <img src="/galo.png" alt="Escudo do Galo" className="bg-galo" />
+
+      {modalAberto && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0,0,0,0.85)",
+            zIndex: 9999,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#111",
+              border: "2px solid #FFD700",
+              borderRadius: "10px",
+              maxWidth: "600px",
+              width: "100%",
+              maxHeight: "80vh",
+              overflowY: "auto",
+              position: "relative",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
+            }}
+          >
+            <button
+              onClick={() => setModalAberto(false)}
+              style={{
+                position: "absolute",
+                top: "15px",
+                right: "20px",
+                background: "none",
+                border: "none",
+                color: "#FFD700",
+                fontSize: "1.5rem",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              ✖
+            </button>
+
+            <div style={{ padding: "30px" }}>
+              <h2
+                style={{
+                  color: "#FFD700",
+                  borderBottom: "1px solid #333",
+                  paddingBottom: "15px",
+                  marginBottom: "20px",
+                  marginTop: 0,
+                }}
+              >
+                📜 As Promessas Esquecidas
+              </h2>
+              <ul
+                style={{
+                  color: "#fff",
+                  listStyleType: "none",
+                  padding: 0,
+                  margin: 0,
+                }}
+              >
+                {listaPromessas.map((promessa, index) => (
+                  <li
+                    key={index}
+                    style={{
+                      marginBottom: "15px",
+                      backgroundColor: "#222",
+                      padding: "15px",
+                      borderRadius: "6px",
+                      borderLeft: "4px solid #FF4444",
+                    }}
+                  >
+                    <strong>{index + 1}.</strong> {promessa}
+                  </li>
+                ))}
+              </ul>
+              <p
+                style={{
+                  color: "#888",
+                  fontSize: "0.85rem",
+                  textAlign: "center",
+                  marginTop: "20px",
+                  fontStyle: "italic",
+                }}
+              >
+                A Massa não esquece. O Dossiê registra.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <header className="header-protesto">
         <h1>Galo do Povo: A Verdade da SAF</h1>
         <p className="contador">
           Dias sob a SAF: <strong>{contador.dias}</strong> | Promessas
-          Quebradas: <strong>{contador.mentiras}</strong> | Técnico atual no
-          cargo: <strong>{contador.diasTecnico} dias</strong>
+          Quebradas:{" "}
+          <strong
+            onClick={() => setModalAberto(true)}
+            style={{
+              color: "#FFD700",
+              textDecoration: "underline",
+              cursor: "pointer",
+              padding: "2px 5px",
+              backgroundColor: "rgba(255, 215, 0, 0.1)",
+              borderRadius: "4px",
+            }}
+            title="Clique para ver a lista!"
+          >
+            {listaPromessas.length} 🔍
+          </strong>{" "}
+          | Técnico atual no cargo: <strong>{contador.diasTecnico} dias</strong>
         </p>
       </header>
 
-      {/* RESTAURADO: ESTILOS ORIGINAIS DOS DONOS */}
       <div className="split-container" style={{ marginTop: "40px" }}>
         <div className="split-side side-left">
           <div
@@ -154,10 +283,10 @@ export default function App() {
         </div>
       </div>
 
-      <section className="materias-section">
+      {/* 👇 Adicionamos o ID 'inicio-dossie' aqui para servir de âncora 👇 */}
+      <section className="materias-section" id="inicio-dossie">
         <h2 className="titulo-secao">O Dossiê Completo</h2>
 
-        {/* RESTAURADO: BARRA DE PESQUISA COM ESTILO */}
         <div
           style={{
             maxWidth: "800px",
@@ -218,7 +347,6 @@ export default function App() {
 
               <p style={{ flex: 1, marginBottom: "20px" }}>{m.conteudo}</p>
 
-              {/* RESTAURADO: LÓGICA DO PULGUINHA VS APURAÇÃO EXCLUSIVA E BOTÃO DA FONTE */}
               <div
                 style={{
                   marginTop: "auto",
@@ -292,7 +420,6 @@ export default function App() {
           </p>
         )}
 
-        {/* RESTAURADO: BOTÕES DE PAGINAÇÃO ESTILIZADOS */}
         {totalPaginas > 1 && (
           <div
             style={{
@@ -303,8 +430,9 @@ export default function App() {
               marginTop: "30px",
             }}
           >
+            {/* 👇 Atualizamos os botões para chamar a nova função 👇 */}
             <button
-              onClick={() => setPaginaAtual(paginaAtual - 1)}
+              onClick={() => mudarPaginaESubir(paginaAtual - 1)}
               disabled={paginaAtual === 1}
               style={{
                 padding: "10px 15px",
@@ -318,13 +446,11 @@ export default function App() {
             >
               ◀ Anterior
             </button>
-
             <span style={{ color: "#fff", fontWeight: "bold" }}>
               Página {paginaAtual} de {totalPaginas}
             </span>
-
             <button
-              onClick={() => setPaginaAtual(paginaAtual + 1)}
+              onClick={() => mudarPaginaESubir(paginaAtual + 1)}
               disabled={paginaAtual === totalPaginas}
               style={{
                 padding: "10px 15px",
@@ -385,7 +511,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* RESTAURADO: AVISO JURÍDICO */}
       <footer
         style={{
           marginTop: "50px",
