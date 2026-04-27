@@ -37,6 +37,7 @@ const parser = new Parser({
   headers: { "User-Agent": "Mozilla/5.0" },
 });
 
+// LISTA DE FONTES DO PULGUINHA
 const fontesRSS = [
   {
     nome: "GE.globo",
@@ -47,6 +48,12 @@ const fontesRSS = [
     nome: "Google News",
     url: "https://news.google.com/rss/search?q=atletico+mg+saf&hl=pt-BR&gl=BR&ceid=BR:pt-419",
   },
+  {
+    nome: "No Ataque",
+    url: "https://noataque.com.br/clubes/atletico-mg/feed/",
+  },
+  { nome: "Trivela", url: "https://trivela.com.br/feed/" },
+  { nome: "O Tempo", url: "https://www.otempo.com.br/rss/sports" },
 ];
 
 async function buscarNoticiasAutomaticas() {
@@ -137,24 +144,28 @@ app.get("/api/materias", async (req, res) => {
   }
 });
 
-// Envio de e-mail (Denúncias)
+// Envio de e-mail (Denúncias e Vazamentos)
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: { user: "galodopovo13@gmail.com", pass: process.env.EMAIL_PASSWORD },
 });
 
 app.post("/api/sugestoes", async (req, res) => {
-  const { nome, email, mensagem } = req.body;
+  // Agora recebemos a "midia" também
+  const { nome, email, mensagem, midia } = req.body;
+
   const mailOptions = {
     from: "galodopovo13@gmail.com",
     to: "galodopovo13@gmail.com",
-    subject: "⚠️ NOVA DENÚNCIA - Galo do Povo",
-    text: `Nome: ${nome}\nE-mail: ${email}\n\nMensagem:\n${mensagem}`,
+    subject: "🚨 NOVA DENÚNCIA/VAZAMENTO - Galo do Povo",
+    text: `🕵️‍♂️ Nome: ${nome || "Anônimo"}\n📧 E-mail: ${email || "Não informado"}\n\n📝 Relato da Denúncia:\n${mensagem}\n\n📎 Link ou Mídia:\n${midia || "Nenhum link enviado"}`,
   };
+
   try {
     await transporter.sendMail(mailOptions);
     res.json({ success: true });
   } catch (err) {
+    console.error("Erro no envio do e-mail:", err);
     res.status(500).json({ success: false });
   }
 });
