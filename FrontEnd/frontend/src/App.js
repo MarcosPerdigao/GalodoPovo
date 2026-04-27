@@ -7,6 +7,7 @@ export default function App() {
   const [termoBusca, setTermoBusca] = useState("");
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [modalPromessasAberto, setModalPromessasAberto] = useState(false);
+  const [modalTecnicosAberto, setModalTecnicosAberto] = useState(false);
 
   // Modais e Estados Especiais
   const [modalCampanhaAberto, setModalCampanhaAberto] = useState(true);
@@ -75,7 +76,40 @@ export default function App() {
     },
   ];
 
-  
+  // 📋 HISTÓRICO DE TÉCNICOS EFETIVOS (ERA SAF)
+  const historicoTecnicos = [
+    {
+      nome: "Luiz Felipe Scolari (Felipão)",
+      periodo: "16/06/2023 - 20/03/2024",
+      motivo: "Demissão",
+      dias: "279 dias",
+    },
+    {
+      nome: "Gabriel Milito",
+      periodo: "24/03/2024 - 04/12/2024",
+      motivo: "Demissão",
+      dias: "256 dias",
+    },
+    {
+      nome: "Cuca",
+      periodo: "29/12/2024 - 29/08/2025",
+      motivo: "Demissão",
+      dias: "244 dias",
+    },
+    {
+      nome: "Jorge Sampaoli",
+      periodo: "02/09/2025 - 12/02/2026",
+      motivo: "Demissão",
+      dias: "164 dias",
+    },
+    {
+      nome: "Eduardo Domínguez",
+      periodo: "24/02/2026 - Atual",
+      motivo: "Em cargo",
+      dias: "Trabalhando...",
+    },
+  ];
+
   // ⏳ LINHA DO TEMPO DAS CRISES
   const linhaDoTempo = [
     {
@@ -273,7 +307,7 @@ export default function App() {
                   Apoie a campanha do Frossard nas redes sociais.
                 </p>
                 <a
-                  href="https://x.com/canaldofrossard/status/2048779423336353823?s=20"
+                  href="https://x.com/frossard"
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -290,7 +324,7 @@ export default function App() {
                   X (Twitter)
                 </a>
                 <a
-                  href="https://www.instagram.com/reel/DXo6CCOAWcz/?igsh=NWRsZ3hsbnhleTZ0"
+                  href="https://instagram.com/frossard"
                   target="_blank"
                   rel="noreferrer"
                   style={{
