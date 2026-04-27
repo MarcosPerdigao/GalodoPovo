@@ -663,17 +663,39 @@ export default function App() {
             <button
               onClick={() => mudarPaginaESubir(paginaAtual - 1)}
               disabled={paginaAtual === 1}
-              className="btn-paginacao"
+              style={{
+                padding: "10px 15px",
+                backgroundColor: paginaAtual === 1 ? "#333" : "#FFD700",
+                color: paginaAtual === 1 ? "#777" : "#000",
+                border: "none",
+                borderRadius: "5px",
+                fontWeight: "bold",
+                cursor: paginaAtual === 1 ? "not-allowed" : "pointer",
+                transition: "all 0.3s",
+              }}
             >
               ◀ Anterior
             </button>
+
             <span style={{ color: "#fff", fontWeight: "bold" }}>
               Página {paginaAtual} de {totalPaginas}
             </span>
+
             <button
               onClick={() => mudarPaginaESubir(paginaAtual + 1)}
               disabled={paginaAtual === totalPaginas}
-              className="btn-paginacao"
+              style={{
+                padding: "10px 15px",
+                backgroundColor:
+                  paginaAtual === totalPaginas ? "#333" : "#FFD700",
+                color: paginaAtual === totalPaginas ? "#777" : "#000",
+                border: "none",
+                borderRadius: "5px",
+                fontWeight: "bold",
+                cursor:
+                  paginaAtual === totalPaginas ? "not-allowed" : "pointer",
+                transition: "all 0.3s",
+              }}
             >
               Próxima ▶
             </button>
