@@ -63,7 +63,7 @@ export default function App() {
         </p>
       </header>
 
-      {/* OS ROSTOS (AGORA BEM DEPOIS DO CABEÇALHO) */}
+      {/* RESTAURADO: ESTILOS ORIGINAIS DOS DONOS */}
       <div className="split-container" style={{ marginTop: "40px" }}>
         <div className="split-side side-left">
           <div
@@ -157,6 +157,7 @@ export default function App() {
       <section className="materias-section">
         <h2 className="titulo-secao">O Dossiê Completo</h2>
 
+        {/* RESTAURADO: BARRA DE PESQUISA COM ESTILO */}
         <div
           style={{
             maxWidth: "800px",
@@ -197,7 +198,6 @@ export default function App() {
             >
               <h2>{m.titulo}</h2>
 
-              {/* DATA DA CAPTURA PELO PULGUINHA (MUDANÇA AQUI) */}
               <p
                 style={{
                   fontSize: "0.85rem",
@@ -218,6 +218,7 @@ export default function App() {
 
               <p style={{ flex: 1, marginBottom: "20px" }}>{m.conteudo}</p>
 
+              {/* RESTAURADO: LÓGICA DO PULGUINHA VS APURAÇÃO EXCLUSIVA E BOTÃO DA FONTE */}
               <div
                 style={{
                   marginTop: "auto",
@@ -291,6 +292,7 @@ export default function App() {
           </p>
         )}
 
+        {/* RESTAURADO: BOTÕES DE PAGINAÇÃO ESTILIZADOS */}
         {totalPaginas > 1 && (
           <div
             style={{
@@ -383,6 +385,7 @@ export default function App() {
         </div>
       </section>
 
+      {/* RESTAURADO: AVISO JURÍDICO */}
       <footer
         style={{
           marginTop: "50px",
