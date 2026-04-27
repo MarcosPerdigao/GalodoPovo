@@ -30,9 +30,9 @@ const materiaSchema = new mongoose.Schema({
 
 const Materia = mongoose.model("Materia", materiaSchema);
 
-// ----------------------------------------------------
+// ------------------------------------------------
 // 🤖 PULGUINHA: BUSCA E SALVA NO BANCO
-// ----------------------------------------------------
+// ------------------------------------------------
 const parser = new Parser({
   headers: { "User-Agent": "Mozilla/5.0" },
 });

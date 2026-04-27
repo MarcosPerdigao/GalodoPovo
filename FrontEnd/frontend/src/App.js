@@ -203,10 +203,10 @@ export default function App() {
     <div>
       <img src="/galo.png" alt="Escudo do Galo" className="bg-galo" />
 
-      {/* 👇 MODAL: CENTRAL DE PROTESTOS INICIAL 👇 */}
+      {/*  MODAL: CENTRAL DE PROTESTOS INICIAL */}
       {modalCampanhaAberto && (
         <div
-          onClick={() => setModalCampanhaAberto(false)}
+          onClick={() => setModalCampanhaAberto(false)}   
           style={{
             position: "fixed",
             top: 0,
