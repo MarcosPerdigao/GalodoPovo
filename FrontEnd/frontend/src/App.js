@@ -3,69 +3,69 @@ import "./App.css";
 
 export default function App() {
   const [materias, setMaterias] = useState([]);
-  const [contador, setContador] = useState({
-    dias: 0,
-    diasTecnico: 0,
-  });
-
+  const [contador, setContador] = useState({ dias: 0, diasTecnico: 0 });
   const [termoBusca, setTermoBusca] = useState("");
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [modalPromessasAberto, setModalPromessasAberto] = useState(false);
   const [modalTecnicosAberto, setModalTecnicosAberto] = useState(false);
   const [modalCampanhaAberto, setModalCampanhaAberto] = useState(true);
+
+  // 👇 NOVO ESTADO: O Taxímetro de Juros 👇
+  const [jurosRodando, setJurosRodando] = useState(0);
+
   const ITENS_POR_PAGINA = 10;
 
-  // 📜 LISTA DE PROMESSAS (Revisada, sem repetições e focada em fatos)
+  // 📜 LISTA DE 10 PROMESSAS CRÍTICAS
   const listaPromessas = [
     {
       titulo: "Assumir e sanear 100% das dívidas do clube",
       situacao:
-        "A promessa era que a SAF assumiria o passivo e o aporte inicial resolveria o sufoco. Porém, em abril de 2026, a dívida informada ainda gira em torno de R$ 1,7 bilhão, sendo R$ 1 bilhão apenas em dívidas bancárias onerosas.",
+        "A promessa era que a SAF assumiria o passivo. Porém, em abril de 2026, a dívida ainda gira em torno de R$ 1,7 bilhão, sendo R$ 1 bilhão apenas em dívidas bancárias onerosas.",
     },
     {
       titulo: "Acabar com os juros que 'comiam' o Atlético",
       situacao:
-        "Os donos prometeram cessar o 'enxuga gelo'. Na realidade, a gestão financeira admite que o clube ainda paga cerca de R$ 250 milhões por ano somente em juros, fazendo a dívida crescer mesmo com recorde de arrecadação.",
+        "Na realidade, a gestão financeira admite que o clube ainda paga cerca de R$ 250 milhões por ano somente em juros, fazendo a dívida crescer mesmo com recorde de arrecadação.",
     },
     {
       titulo: "Transformar o Galo em um clube autossustentável",
       situacao:
-        "O discurso de 'sustentabilidade financeira' ruiu. Pedro Daniel admitiu em 2026 que o clube ainda não está sanado. O endividamento segue alto e as receitas são rapidamente engolidas pelos juros.",
+        "Pedro Daniel admitiu em 2026 que o clube ainda não está sanado. O endividamento segue alto e as receitas são engolidas pelos juros.",
     },
     {
-      titulo: "Aporte rápido de R$ 500 milhões para tranquilidade financeira",
+      titulo: "Aporte rápido de R$ 500 milhões para tranquilidade",
       situacao:
-        "Foi prometido que o dinheiro entraria em 30 dias para dar 'tranquilidade ao futebol'. O aporte ocorreu, mas a tão falada tranquilidade nunca chegou, refletindo-se em contas estranguladas e instabilidade contínua.",
+        "Foi prometido que o dinheiro daria 'tranquilidade ao futebol'. O aporte ocorreu, mas a tranquilidade nunca chegou, refletindo-se em instabilidade contínua.",
     },
     {
       titulo: "Time competitivo na 'Primeira Prateleira' do Brasil",
       situacao:
-        "Promessa de rivalizar em estrutura e elenco com Flamengo e Palmeiras. Na prática: falhas na montagem do elenco, perda das Finais de 2024 e o time fora da Libertadores de 2025.",
+        "Promessa de rivalizar com Flamengo e Palmeiras. Na prática: falhas no elenco, perda das Finais de 2024 e o time fora da Libertadores de 2025.",
     },
     {
       titulo: "Gestão profissional e planejamento a longo prazo",
       situacao:
-        "O discurso de governança corporativa colidiu com a realidade esportiva: o Galo virou um 'moedor de técnicos' (4 treinadores em 2 anos de SAF), evidenciando amadorismo nas decisões do futebol.",
+        "O discurso corporativo colidiu com a realidade: o Galo virou um 'moedor de técnicos' (4 treinadores na Era SAF), evidenciando amadorismo.",
     },
     {
       titulo: "Obrigações financeiras rigorosamente em dia",
       situacao:
-        "A desculpa de que 'a SAF acabaria com os atrasos' não se sustentou. O ano de 2025 foi marcado por atrasos salariais, luvas pendentes, direitos de imagem atrasados e notificações extrajudiciais de jogadores.",
+        "O ano de 2025 foi marcado por atrasos salariais, luvas pendentes, direitos de imagem atrasados e notificações extrajudiciais.",
     },
     {
       titulo: "Transparência e governança como valores inegociáveis",
       situacao:
-        "Prometeram clareza total, mas a gestão é ofuscada por crises de comunicação, dúvidas sobre fundos de investimento (Galo Forte/Vorcaro) e falta de transparência sobre os beneficiários finais das operações.",
+        "A gestão é ofuscada por crises de comunicação, dúvidas sobre o Fundo Galo Forte e falta de transparência sobre beneficiários.",
     },
     {
       titulo: "Buscar parceiro estrangeiro para fortalecer o projeto",
       situacao:
-        "Rubens Menin declarou publicamente que o clube buscaria capital e expertise internacional. No fim, o controle ficou restrito e centralizado nos próprios mecenas/credores locais.",
+        "Prometeram buscar capital internacional. No fim, o controle ficou restrito e centralizado nos próprios mecenas/credores locais.",
     },
     {
       titulo: "Reaproximar a verdadeira Massa Atleticana",
       situacao:
-        "A promessa mais quebrada de todas. O distanciamento aumentou com ingressos caros, elitização da Arena e um 'Conselho da Massa' que não tem voz ativa. O resultado é o atrito crônico entre os donos e a arquibancada.",
+        "O distanciamento aumentou com ingressos caros, elitização da Arena e um 'Conselho da Massa' sem voz ativa.",
     },
   ];
 
@@ -103,21 +103,74 @@ export default function App() {
     },
   ];
 
+  // ⏳ LINHA DO TEMPO DAS CRISES
+  const linhaDoTempo = [
+    {
+      data: "Julho / 2023",
+      titulo: "Aprovação da SAF",
+      desc: "Venda de 75% do clube aprovada. Promessa de quitação das dívidas onerosas.",
+    },
+    {
+      data: "Novembro / 2023",
+      titulo: "Assunção Oficial",
+      desc: "A SAF passa a comandar oficialmente o clube. Começa o 'relógio' da gestão.",
+    },
+    {
+      data: "Dezembro / 2024",
+      titulo: "Fracasso Esportivo",
+      desc: "Após um ano de altos e baixos, perda das finais da Copa do Brasil e Libertadores.",
+    },
+    {
+      data: "Ano de 2025",
+      titulo: "Atrasos e Protestos",
+      desc: "Elenco sofre com atrasos salariais e de imagem. Trocas sucessivas de técnicos.",
+    },
+    {
+      data: "Fevereiro / 2026",
+      titulo: "Queda de Sampaoli",
+      desc: "Segunda passagem do técnico termina de forma abrupta, mostrando falta de planejamento.",
+    },
+    {
+      data: "Abril / 2026",
+      titulo: "O Estopim da Massa",
+      desc: "Goleada para o Flamengo. Protestos pesados contra os donos da SAF e jogadores. Campanha #SafNota0.",
+    },
+  ];
+
+  // 👇 LÓGICA DO TAXÍMETRO DE JUROS 👇
+  useEffect(() => {
+    // Cálculo: R$ 250.000.000 / ano
+    const taxaPorMilissegundo = 250000000 / (365 * 24 * 60 * 60 * 1000);
+    const dataInicial = new Date("2026-01-01T00:00:00").getTime(); // Conta a partir do início de 2026
+
+    const intervaloJuros = setInterval(() => {
+      const agora = new Date().getTime();
+      const diferencaTempo = agora - dataInicial;
+      setJurosRodando(diferencaTempo * taxaPorMilissegundo);
+    }, 50); // Atualiza a cada 50 milissegundos para o número girar rápido
+
+    return () => clearInterval(intervaloJuros);
+  }, []);
+
+  // Formata o dinheiro para ficar bonito (R$ 1.000.000,00)
+  const jurosFormatado = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(jurosRodando);
+
   useEffect(() => {
     window.scrollTo(0, 0);
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
-
     fetch("https://galodopovo-api.onrender.com/api/materias")
       .then((res) => res.json())
       .then((data) => setMaterias(data))
-      .catch((err) => console.error(err));
-
+      .catch(console.error);
     fetch("https://galodopovo-api.onrender.com/api/contador")
       .then((res) => res.json())
       .then((data) => setContador(data))
-      .catch((err) => console.error(err));
+      .catch(console.error);
   }, []);
 
   const materiasFiltradas = materias.filter((m) => {
@@ -142,9 +195,8 @@ export default function App() {
   const mudarPaginaESubir = (novaPagina) => {
     setPaginaAtual(novaPagina);
     const secaoDossie = document.getElementById("inicio-dossie");
-    if (secaoDossie) {
+    if (secaoDossie)
       secaoDossie.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
   };
 
   return (
@@ -481,7 +533,6 @@ export default function App() {
               cursor: "pointer",
               paddingBottom: "1px",
             }}
-            title="Clique para abrir a lista detalhada"
           >
             {listaPromessas.length}
           </strong>{" "}
@@ -494,14 +545,52 @@ export default function App() {
               cursor: "pointer",
               paddingBottom: "1px",
             }}
-            title="Clique para ver o histórico do moedor de técnicos"
           >
             {contador.diasTecnico} dias
           </strong>
         </p>
+
+        {/* 👇 O TAXÍMETRO NA TELA 👇 */}
+        <div
+          style={{
+            marginTop: "20px",
+            backgroundColor: "rgba(255,0,0,0.15)",
+            border: "1px solid #FF4444",
+            padding: "15px",
+            borderRadius: "8px",
+            display: "inline-block",
+          }}
+        >
+          <p
+            style={{
+              margin: 0,
+              fontSize: "0.9rem",
+              color: "#FF4444",
+              textTransform: "uppercase",
+              fontWeight: "bold",
+              letterSpacing: "1px",
+            }}
+          >
+            💸 Taxímetro de Juros (Somente neste ano)
+          </p>
+          <p
+            style={{
+              margin: "5px 0 0 0",
+              fontSize: "2rem",
+              color: "#fff",
+              fontWeight: "bold",
+              fontFamily: "monospace",
+              textShadow: "0 0 10px rgba(255,0,0,0.5)",
+            }}
+          >
+            {jurosFormatado}
+          </p>
+          <p style={{ margin: "5px 0 0 0", fontSize: "0.7rem", color: "#888" }}>
+            Baseado na estimativa de R$ 250 mi/ano (R$ 7,92 por segundo).
+          </p>
+        </div>
       </header>
 
-      {/* Rosto dos Donos */}
       <div className="split-container" style={{ marginTop: "40px" }}>
         <div className="split-side side-left">
           <div
@@ -574,6 +663,77 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* 👇 NOVA SEÇÃO: LINHA DO TEMPO 👇 */}
+      <section
+        style={{ maxWidth: "800px", margin: "50px auto", padding: "0 20px" }}
+      >
+        <h2
+          style={{
+            color: "#fff",
+            borderBottom: "2px solid #333",
+            paddingBottom: "10px",
+            marginBottom: "30px",
+            textAlign: "center",
+          }}
+        >
+          ⏳ Linha do Tempo: O Colapso
+        </h2>
+        <div
+          style={{
+            position: "relative",
+            borderLeft: "2px solid #444",
+            paddingLeft: "20px",
+            marginLeft: "10px",
+          }}
+        >
+          {linhaDoTempo.map((item, index) => (
+            <div
+              key={index}
+              style={{ marginBottom: "25px", position: "relative" }}
+            >
+              {/* Bolinha da timeline */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: "-27px",
+                  top: "5px",
+                  width: "12px",
+                  height: "12px",
+                  backgroundColor: "#FFD700",
+                  borderRadius: "50%",
+                  border: "2px solid #111",
+                }}
+              ></div>
+              <span
+                style={{
+                  color: "#FFD700",
+                  fontSize: "0.85rem",
+                  fontWeight: "bold",
+                  letterSpacing: "1px",
+                }}
+              >
+                {item.data}
+              </span>
+              <h3
+                style={{ color: "#fff", margin: "5px 0", fontSize: "1.2rem" }}
+              >
+                {item.titulo}
+              </h3>
+              <p
+                style={{
+                  color: "#ccc",
+                  fontSize: "0.95rem",
+                  margin: 0,
+                  lineHeight: "1.4",
+                }}
+              >
+                {item.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <section className="materias-section" id="inicio-dossie">
         <h2 className="titulo-secao">O Dossiê Completo</h2>
@@ -676,11 +836,9 @@ export default function App() {
             >
               ◀ Anterior
             </button>
-
             <span style={{ color: "#fff", fontWeight: "bold" }}>
               Página {paginaAtual} de {totalPaginas}
             </span>
-
             <button
               onClick={() => mudarPaginaESubir(paginaAtual + 1)}
               disabled={paginaAtual === totalPaginas}
