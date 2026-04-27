@@ -10,9 +10,11 @@ export default function App() {
 
   const [termoBusca, setTermoBusca] = useState("");
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const [modalAberto, setModalAberto] = useState(false);
+  const [modalPromessasAberto, setModalPromessasAberto] = useState(false);
+  const [modalTecnicosAberto, setModalTecnicosAberto] = useState(false); // Novo Modal
   const ITENS_POR_PAGINA = 10;
 
+  // 📜 LISTA DE PROMESSAS
   const listaPromessas = [
     "A Arena MRV será inaugurada 100% paga e sem gerar dívidas para o clube.",
     "O Galo terá um elenco protagonista e disputará todos os títulos de igual para igual.",
@@ -23,9 +25,37 @@ export default function App() {
     "O departamento de futebol terá autonomia técnica sem interferência direta dos investidores.",
   ];
 
+  // 📋 HISTÓRICO DE TÉCNICOS (Desde o início da SAF em 01/11/2023)
+  // Você pode atualizar os dias conforme os dados reais do seu Dossiê
+  const historicoTecnicos = [
+    {
+      nome: "Luiz Felipe Scolari",
+      periodo: "Nov/2023 - Mar/2024",
+      motivo: "Demissão",
+      dias: "140 dias (na era SAF)",
+    },
+    {
+      nome: "Gabriel Milito",
+      periodo: "Mar/2024 - Nov/2024",
+      motivo: "Demissão",
+      dias: "252 dias",
+    },
+    {
+      nome: "Técnico de 2025 (Exemplo)",
+      periodo: "Jan/2025 - Jan/2026",
+      motivo: "Rescisão",
+      dias: "365 dias",
+    },
+    {
+      nome: "Eduardo Domínguez",
+      periodo: "Fev/2026 - Atual",
+      motivo: "Em cargo",
+      dias: "Contando...",
+    },
+  ];
+
   useEffect(() => {
     window.scrollTo(0, 0);
-
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
     }
@@ -60,7 +90,6 @@ export default function App() {
     indexUltimoItem,
   );
 
-  // 👇 NOVA FUNÇÃO: Muda a página e sobe a tela suavemente 👇
   const mudarPaginaESubir = (novaPagina) => {
     setPaginaAtual(novaPagina);
     const secaoDossie = document.getElementById("inicio-dossie");
@@ -73,15 +102,18 @@ export default function App() {
     <div>
       <img src="/galo.png" alt="Escudo do Galo" className="bg-galo" />
 
-      {modalAberto && (
+      {/* MODAL 1: PROMESSAS */}
+      {modalPromessasAberto && (
         <div
+          className="modal-overlay"
+          onClick={() => setModalPromessasAberto(false)}
           style={{
             position: "fixed",
             top: 0,
             left: 0,
             width: "100vw",
             height: "100vh",
-            backgroundColor: "rgba(0,0,0,0.85)",
+            backgroundColor: "rgba(0,0,0,0.9)",
             zIndex: 9999,
             display: "flex",
             justifyContent: "center",
@@ -90,6 +122,8 @@ export default function App() {
           }}
         >
           <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: "#111",
               border: "2px solid #FFD700",
@@ -99,11 +133,11 @@ export default function App() {
               maxHeight: "80vh",
               overflowY: "auto",
               position: "relative",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.8)",
+              padding: "30px",
             }}
           >
             <button
-              onClick={() => setModalAberto(false)}
+              onClick={() => setModalPromessasAberto(false)}
               style={{
                 position: "absolute",
                 top: "15px",
@@ -113,59 +147,137 @@ export default function App() {
                 color: "#FFD700",
                 fontSize: "1.5rem",
                 cursor: "pointer",
-                fontWeight: "bold",
               }}
             >
               ✖
             </button>
-
-            <div style={{ padding: "30px" }}>
-              <h2
+            <h2
+              style={{
+                color: "#FFD700",
+                borderBottom: "1px solid #333",
+                paddingBottom: "15px",
+              }}
+            >
+              📜 Lista de Promessas Quebradas
+            </h2>
+            {listaPromessas.map((p, i) => (
+              <div
+                key={i}
                 style={{
-                  color: "#FFD700",
-                  borderBottom: "1px solid #333",
-                  paddingBottom: "15px",
-                  marginBottom: "20px",
-                  marginTop: 0,
-                }}
-              >
-                📜 As Promessas Esquecidas
-              </h2>
-              <ul
-                style={{
+                  backgroundColor: "#222",
+                  padding: "15px",
+                  margin: "10px 0",
+                  borderRadius: "5px",
+                  borderLeft: "4px solid #FF4444",
                   color: "#fff",
-                  listStyleType: "none",
-                  padding: 0,
-                  margin: 0,
                 }}
               >
-                {listaPromessas.map((promessa, index) => (
-                  <li
-                    key={index}
-                    style={{
-                      marginBottom: "15px",
-                      backgroundColor: "#222",
-                      padding: "15px",
-                      borderRadius: "6px",
-                      borderLeft: "4px solid #FF4444",
-                    }}
-                  >
-                    <strong>{index + 1}.</strong> {promessa}
-                  </li>
-                ))}
-              </ul>
-              <p
+                {i + 1}. {p}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: TÉCNICOS (O NOVO) */}
+      {modalTecnicosAberto && (
+        <div
+          className="modal-overlay"
+          onClick={() => setModalTecnicosAberto(false)}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            backgroundColor: "rgba(0,0,0,0.9)",
+            zIndex: 9999,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "20px",
+          }}
+        >
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: "#111",
+              border: "2px solid #FFD700",
+              borderRadius: "10px",
+              maxWidth: "600px",
+              width: "100%",
+              maxHeight: "80vh",
+              overflowY: "auto",
+              position: "relative",
+              padding: "30px",
+            }}
+          >
+            <button
+              onClick={() => setModalTecnicosAberto(false)}
+              style={{
+                position: "absolute",
+                top: "15px",
+                right: "20px",
+                background: "none",
+                border: "none",
+                color: "#FFD700",
+                fontSize: "1.5rem",
+                cursor: "pointer",
+              }}
+            >
+              ✖
+            </button>
+            <h2
+              style={{
+                color: "#FFD700",
+                borderBottom: "1px solid #333",
+                paddingBottom: "15px",
+              }}
+            >
+              📉 Rotatividade de Técnicos (Era SAF)
+            </h2>
+            <p style={{ color: "#888", marginBottom: "20px" }}>
+              Abaixo os profissionais que passaram pelo comando sob a gestão
+              atual:
+            </p>
+            {historicoTecnicos.map((t, i) => (
+              <div
+                key={i}
                 style={{
-                  color: "#888",
-                  fontSize: "0.85rem",
-                  textAlign: "center",
-                  marginTop: "20px",
-                  fontStyle: "italic",
+                  backgroundColor: "#222",
+                  padding: "15px",
+                  margin: "10px 0",
+                  borderRadius: "5px",
+                  borderLeft:
+                    t.motivo === "Em cargo"
+                      ? "4px solid #228B22"
+                      : "4px solid #FF4444",
+                  color: "#fff",
                 }}
               >
-                A Massa não esquece. O Dossiê registra.
-              </p>
-            </div>
+                <h3 style={{ margin: "0 0 5px 0", color: "#FFD700" }}>
+                  {t.nome}
+                </h3>
+                <p style={{ margin: 0, fontSize: "0.9rem" }}>
+                  📅 Período: {t.periodo}
+                </p>
+                <p style={{ margin: 0, fontSize: "0.9rem" }}>
+                  ⏱️ Duração: <strong>{t.dias}</strong>
+                </p>
+                <p
+                  style={{
+                    margin: "5px 0 0 0",
+                    fontSize: "0.8rem",
+                    color: t.motivo === "Em cargo" ? "#00FF00" : "#FF4444",
+                    fontWeight: "bold",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  {t.motivo}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -176,20 +288,28 @@ export default function App() {
           Dias sob a SAF: <strong>{contador.dias}</strong> | Promessas
           Quebradas:{" "}
           <strong
-            onClick={() => setModalAberto(true)}
+            onClick={() => setModalPromessasAberto(true)}
             style={{
               color: "#FFD700",
               textDecoration: "underline",
               cursor: "pointer",
-              padding: "2px 5px",
-              backgroundColor: "rgba(255, 215, 0, 0.1)",
-              borderRadius: "4px",
+              padding: "0 5px",
             }}
-            title="Clique para ver a lista!"
           >
             {listaPromessas.length} 🔍
           </strong>{" "}
-          | Técnico atual no cargo: <strong>{contador.diasTecnico} dias</strong>
+          | Técnico atual:{" "}
+          <strong
+            onClick={() => setModalTecnicosAberto(true)}
+            style={{
+              color: "#FFD700",
+              textDecoration: "underline",
+              cursor: "pointer",
+              padding: "0 5px",
+            }}
+          >
+            {contador.diasTecnico} dias 🔍
+          </strong>
         </p>
       </header>
 
@@ -283,10 +403,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* 👇 Adicionamos o ID 'inicio-dossie' aqui para servir de âncora 👇 */}
       <section className="materias-section" id="inicio-dossie">
         <h2 className="titulo-secao">O Dossiê Completo</h2>
-
         <div
           style={{
             maxWidth: "800px",
@@ -296,7 +414,7 @@ export default function App() {
         >
           <input
             type="text"
-            placeholder="🔍 Pesquisar no Dossiê (ex: dívida, arena, jogador...)"
+            placeholder="🔍 Pesquisar no Dossiê..."
             value={termoBusca}
             onChange={(e) => setTermoBusca(e.target.value)}
             style={{
@@ -314,19 +432,8 @@ export default function App() {
 
         {materiasPaginadas.length > 0 ? (
           materiasPaginadas.map((m) => (
-            <div
-              id={m.link ? m.link.substring(1) : ""}
-              key={m._id || m.titulo}
-              className="materia-item"
-              style={{
-                position: "relative",
-                display: "flex",
-                flexDirection: "column",
-                paddingBottom: "20px",
-              }}
-            >
+            <div key={m._id || m.titulo} className="materia-item">
               <h2>{m.titulo}</h2>
-
               <p
                 style={{
                   fontSize: "0.85rem",
@@ -336,87 +443,38 @@ export default function App() {
                 }}
               >
                 🕒 Capturado em:{" "}
-                {new Date(m.dataCriacao).toLocaleString("pt-BR", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {new Date(m.dataCriacao).toLocaleString("pt-BR")}
               </p>
-
-              <p style={{ flex: 1, marginBottom: "20px" }}>{m.conteudo}</p>
-
+              <p>{m.conteudo}</p>
               <div
                 style={{
-                  marginTop: "auto",
-                  paddingTop: "15px",
-                  borderTop: "1px solid #333",
+                  marginTop: "15px",
                   display: "flex",
-                  alignItems: "center",
                   justifyContent: "space-between",
-                  gap: "10px",
-                  width: "100%",
+                  alignItems: "center",
                 }}
               >
-                {m.fonteNome === "Pulguinha (Bot)" ? (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "5px",
-                    }}
-                  >
-                    <span style={{ fontSize: "1.2rem" }}>🐔</span>
-                    <span style={{ color: "#ccc", fontSize: "0.8rem" }}>
-                      Vigiado por Pulguinha
-                    </span>
-                  </div>
-                ) : (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "5px",
-                    }}
-                  >
-                    <span style={{ fontSize: "1.2rem" }}>📄</span>
-                    <span style={{ color: "#ccc", fontSize: "0.8rem" }}>
-                      Apuração Exclusiva (Massa)
-                    </span>
-                  </div>
-                )}
-
+                <span style={{ color: "#ccc", fontSize: "0.8rem" }}>
+                  {m.fonteNome === "Pulguinha (Bot)"
+                    ? "🐔 Vigiado por Pulguinha"
+                    : "📄 Apuração da Massa"}
+                </span>
                 {m.fonteUrl && (
                   <a
                     href={m.fonteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-fonte"
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "5px",
-                      fontSize: "0.85rem",
-                      padding: "5px 10px",
-                      border: "1px solid #444",
-                      borderRadius: "4px",
-                      backgroundColor: "#111",
-                      color: "#fff",
-                      textDecoration: "none",
-                    }}
                   >
-                    {m.fonteNome === "Pulguinha (Bot)"
-                      ? "🔗 Ver Matéria Completa"
-                      : `Fonte: ${m.fonteNome}`}
+                    🔗 Ver Fonte
                   </a>
                 )}
               </div>
             </div>
           ))
         ) : (
-          <p style={{ textAlign: "center", color: "#888", fontSize: "1.1rem" }}>
-            Nenhuma matéria encontrada no momento.
+          <p style={{ textAlign: "center", color: "#888" }}>
+            Nenhuma matéria encontrada.
           </p>
         )}
 
@@ -425,90 +483,29 @@ export default function App() {
             style={{
               display: "flex",
               justifyContent: "center",
-              alignItems: "center",
-              gap: "15px",
-              marginTop: "30px",
+              gap: "10px",
+              marginTop: "20px",
             }}
           >
-            {/* 👇 Atualizamos os botões para chamar a nova função 👇 */}
             <button
               onClick={() => mudarPaginaESubir(paginaAtual - 1)}
               disabled={paginaAtual === 1}
-              style={{
-                padding: "10px 15px",
-                backgroundColor: paginaAtual === 1 ? "#222" : "#FFD700",
-                color: paginaAtual === 1 ? "#666" : "#000",
-                border: "none",
-                borderRadius: "5px",
-                fontWeight: "bold",
-                cursor: paginaAtual === 1 ? "not-allowed" : "pointer",
-              }}
+              className="btn-paginacao"
             >
-              ◀ Anterior
+              Anterior
             </button>
-            <span style={{ color: "#fff", fontWeight: "bold" }}>
-              Página {paginaAtual} de {totalPaginas}
+            <span style={{ color: "#fff" }}>
+              {paginaAtual} / {totalPaginas}
             </span>
             <button
               onClick={() => mudarPaginaESubir(paginaAtual + 1)}
               disabled={paginaAtual === totalPaginas}
-              style={{
-                padding: "10px 15px",
-                backgroundColor:
-                  paginaAtual === totalPaginas ? "#222" : "#FFD700",
-                color: paginaAtual === totalPaginas ? "#666" : "#000",
-                border: "none",
-                borderRadius: "5px",
-                fontWeight: "bold",
-                cursor:
-                  paginaAtual === totalPaginas ? "not-allowed" : "pointer",
-              }}
+              className="btn-paginacao"
             >
-              Próxima ▶
+              Próxima
             </button>
           </div>
         )}
-      </section>
-
-      <section className="form-section">
-        <div className="form-container" style={{ textAlign: "center" }}>
-          <h2>Envie sua denúncia!</h2>
-          <p style={{ marginBottom: "25px" }}>
-            A diretoria tenta esconder, mas a arquibancada vê tudo. Nos envie
-            links de matérias exclusivas. Sigilo absoluto.
-          </p>
-          <div
-            style={{
-              backgroundColor: "#222",
-              padding: "20px",
-              borderRadius: "8px",
-              display: "inline-block",
-              border: "1px solid #444",
-              boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
-            }}
-          >
-            <p
-              style={{
-                fontSize: "1.1rem",
-                margin: "0 0 10px 0",
-                color: "#ccc",
-              }}
-            >
-              📧 Fale direto com a moderação:
-            </p>
-            <a
-              href="mailto:galodopovo13@gmail.com"
-              style={{
-                fontSize: "1.4rem",
-                color: "#FFD700",
-                fontWeight: "bold",
-                textDecoration: "none",
-              }}
-            >
-              galodopovo13@gmail.com
-            </a>
-          </div>
-        </div>
       </section>
 
       <footer
@@ -522,7 +519,7 @@ export default function App() {
           fontSize: "0.8rem",
         }}
       >
-        <p style={{ marginBottom: "10px" }}>
+        <p>
           <strong>Galo do Povo</strong> © {new Date().getFullYear()} - O Dossiê
           da Massa.
         </p>
