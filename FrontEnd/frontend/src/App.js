@@ -1,4 +1,3 @@
-// frontend/src/App.jsx
 import React, { useEffect, useState } from "react";
 import "./App.css";
 
@@ -8,13 +7,11 @@ export default function App() {
     dias: 0,
     mentiras: 0,
     diasTecnico: 0,
-    valorArrecadado: 0,
   });
 
-  // --- NOVOS ESTADOS PARA BUSCA E PAGINAÇÃO ---
   const [termoBusca, setTermoBusca] = useState("");
   const [paginaAtual, setPaginaAtual] = useState(1);
-  const ITENS_POR_PAGINA = 10; // Quantas matérias aparecem por página
+  const ITENS_POR_PAGINA = 10;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -34,7 +31,6 @@ export default function App() {
       .catch((err) => console.error(err));
   }, []);
 
-  // --- LÓGICA DE FILTRO (CAIXA DE PESQUISA) ---
   const materiasFiltradas = materias.filter((m) => {
     const termo = termoBusca.toLowerCase();
     const titulo = m.titulo ? m.titulo.toLowerCase() : "";
@@ -42,8 +38,6 @@ export default function App() {
     return titulo.includes(termo) || conteudo.includes(termo);
   });
 
-  // --- LÓGICA DE PAGINAÇÃO ---
-  // Sempre que o usuário digitar algo na busca, volta para a página 1
   useEffect(() => {
     setPaginaAtual(1);
   }, [termoBusca]);
@@ -51,25 +45,10 @@ export default function App() {
   const totalPaginas = Math.ceil(materiasFiltradas.length / ITENS_POR_PAGINA);
   const indexUltimoItem = paginaAtual * ITENS_POR_PAGINA;
   const indexPrimeiroItem = indexUltimoItem - ITENS_POR_PAGINA;
-  // Recorta o array de matérias para mostrar só as da página atual
   const materiasPaginadas = materiasFiltradas.slice(
     indexPrimeiroItem,
     indexUltimoItem,
   );
-
-  // --- MATEMÁTICA DA BARRA DE PROGRESSO ---
-  const META_CAMPANHA = 13000;
-  const progresso = Math.min(
-    (contador.valorArrecadado / META_CAMPANHA) * 100,
-    100,
-  );
-
-  const formatarMoeda = (valor) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(valor || 0);
-  };
 
   return (
     <div>
@@ -84,128 +63,8 @@ export default function App() {
         </p>
       </header>
 
-      {/* BANNER DA CAMPANHA DE 13 MIL */}
-      <div
-        className="campanha-pix"
-        style={{
-          backgroundColor: "#111",
-          border: "2px solid #FFD700",
-          padding: "20px",
-          borderRadius: "8px",
-          textAlign: "center",
-          margin: "20px auto",
-          maxWidth: "800px",
-          color: "#fff",
-          boxShadow: "0 4px 15px rgba(255, 215, 0, 0.2)",
-        }}
-      >
-        <h2
-          style={{
-            color: "#FFD700",
-            marginBottom: "10px",
-            textTransform: "uppercase",
-          }}
-        >
-          🏟️ Campanha: A Massa Compra a SAF
-        </h2>
-        <p style={{ fontSize: "1.1rem", marginBottom: "15px" }}>
-          Se o problema é dinheiro, a torcida resolve. Nossa meta inicial é{" "}
-          <strong>R$ 13.000,00</strong> para mostrar a força do povo e iniciar a
-          retomada!
-        </p>
-
-        <div
-          style={{
-            width: "100%",
-            backgroundColor: "#333",
-            height: "30px",
-            borderRadius: "15px",
-            margin: "20px 0",
-            overflow: "hidden",
-            border: "1px solid #444",
-            position: "relative",
-          }}
-        >
-          <div
-            style={{
-              width: `${progresso}%`,
-              backgroundColor: "#FFD700",
-              height: "100%",
-              transition: "width 1s ease-in-out",
-            }}
-          ></div>
-          <span
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              color: progresso > 50 ? "#000" : "#fff",
-              fontWeight: "bold",
-              fontSize: "1rem",
-              textShadow: progresso > 50 ? "none" : "1px 1px 2px #000",
-            }}
-          >
-            {formatarMoeda(contador.valorArrecadado)} /{" "}
-            {formatarMoeda(META_CAMPANHA)}
-          </span>
-        </div>
-
-        <div
-          style={{
-            backgroundColor: "#222",
-            padding: "15px",
-            borderRadius: "8px",
-            border: "1px dashed #666",
-          }}
-        >
-          <p
-            style={{
-              fontWeight: "bold",
-              color: "#FF4444",
-              marginBottom: "10px",
-            }}
-          >
-            ⚠️ ATENÇÃO: PROTESTO SOLIDÁRIO
-          </p>
-          <p style={{ fontSize: "0.95rem", marginBottom: "15px" }}>
-            Como não podemos (ainda) comprar o clube, todo o valor arrecadado
-            neste protesto vai direto para quem precisa de verdade.
-          </p>
-          <div
-            style={{
-              background: "#fff",
-              color: "#000",
-              padding: "10px",
-              borderRadius: "5px",
-              display: "inline-block",
-            }}
-          >
-            <p style={{ margin: 0, fontWeight: "bold" }}>
-              PIX DIRETO - HOSPITAL DA BALEIA (BH):
-            </p>
-            <code
-              style={{ fontSize: "1.2rem", color: "#000", fontWeight: "bold" }}
-            >
-              pix@hospitaldabaleia.org.br
-            </code>
-          </div>
-          <p
-            style={{
-              fontSize: "0.85rem",
-              color: "#FFD700",
-              marginTop: "15px",
-              fontWeight: "bold",
-            }}
-          >
-            📸 Fez sua doação? Mande o comprovante para o nosso e-mail lá
-            embaixo para subirmos o nosso contador!
-          </p>
-        </div>
-      </div>
-
-      <div className="split-container">
-        {/* LADO ESQUERDO: RAFAEL MENIN */}
+      {/* OS ROSTOS (AGORA BEM DEPOIS DO CABEÇALHO) */}
+      <div className="split-container" style={{ marginTop: "40px" }}>
         <div className="split-side side-left">
           <div
             className="card-estatico"
@@ -250,7 +109,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* LADO DIREITO: RUBENS MENIN */}
         <div className="split-side side-right">
           <div
             className="card-estatico"
@@ -296,11 +154,9 @@ export default function App() {
         </div>
       </div>
 
-      {/* SEÇÃO DO DOSSIÊ (COM BUSCA E PAGINAÇÃO) */}
       <section className="materias-section">
         <h2 className="titulo-secao">O Dossiê Completo</h2>
 
-        {/* --- CAIXA DE PESQUISA --- */}
         <div
           style={{
             maxWidth: "800px",
@@ -326,12 +182,11 @@ export default function App() {
           />
         </div>
 
-        {/* Renderiza as matérias paginadas */}
         {materiasPaginadas.length > 0 ? (
           materiasPaginadas.map((m) => (
             <div
               id={m.link ? m.link.substring(1) : ""}
-              key={m.id}
+              key={m._id || m.titulo}
               className="materia-item"
               style={{
                 position: "relative",
@@ -341,6 +196,26 @@ export default function App() {
               }}
             >
               <h2>{m.titulo}</h2>
+
+              {/* DATA DA CAPTURA PELO PULGUINHA (MUDANÇA AQUI) */}
+              <p
+                style={{
+                  fontSize: "0.85rem",
+                  color: "#888",
+                  marginBottom: "15px",
+                  fontStyle: "italic",
+                }}
+              >
+                🕒 Capturado em:{" "}
+                {new Date(m.dataCriacao).toLocaleString("pt-BR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </p>
+
               <p style={{ flex: 1, marginBottom: "20px" }}>{m.conteudo}</p>
 
               <div
@@ -363,7 +238,7 @@ export default function App() {
                       gap: "5px",
                     }}
                   >
-                    <span style={{ fontSize: "1.2rem" }}>🤖</span>
+                    <span style={{ fontSize: "1.2rem" }}>🐔</span>
                     <span style={{ color: "#ccc", fontSize: "0.8rem" }}>
                       Vigiado por Pulguinha
                     </span>
@@ -412,11 +287,10 @@ export default function App() {
           ))
         ) : (
           <p style={{ textAlign: "center", color: "#888", fontSize: "1.1rem" }}>
-            Nenhuma matéria encontrada com esse termo.
+            Nenhuma matéria encontrada no momento.
           </p>
         )}
 
-        {/* --- CONTROLES DA PAGINAÇÃO --- */}
         {totalPaginas > 1 && (
           <div
             style={{
@@ -468,14 +342,12 @@ export default function App() {
         )}
       </section>
 
-      {/* Seção de Contato Direto */}
       <section className="form-section">
         <div className="form-container" style={{ textAlign: "center" }}>
-          <h2>Envie sua denúncia ou o Comprovante do PIX!</h2>
+          <h2>Envie sua denúncia!</h2>
           <p style={{ marginBottom: "25px" }}>
             A diretoria tenta esconder, mas a arquibancada vê tudo. Nos envie
-            links de matérias exclusivas ou o comprovante da sua doação para
-            atualizarmos o contador. Sigilo absoluto.
+            links de matérias exclusivas. Sigilo absoluto.
           </p>
           <div
             style={{
@@ -511,7 +383,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* RODAPÉ / AVISO LEGAL */}
       <footer
         style={{
           marginTop: "50px",

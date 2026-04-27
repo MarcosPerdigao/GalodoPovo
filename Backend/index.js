@@ -35,9 +35,7 @@ const Materia = mongoose.model("Materia", materiaSchema);
 let dadosContador = {
   dias: 1000,
   mentiras: 13,
-  diasTecnico: 120,
-  valorArrecadado: 250,
-};
+  diasTecnico: 120};
 
 // ----------------------------------------------------
 // O ROBÔ "VIGIA DA MASSA" (Bot de Notícias)
@@ -138,20 +136,19 @@ buscarNoticiasAutomaticas();
 // ROTAS DA API
 // ----------------------------------------------------
 app.get("/api/contador", (req, res) => {
-  res.json(dadosContador);
-});
+  // Ponto de partida: O dia que Eduardo Domínguez foi anunciado
+  const dataContratacao = new Date("2026-02-24T00:00:00-03:00");
+  const hoje = new Date();
 
-app.get("/api/materias", async (req, res) => {
-  try {
-    // Busca as matérias do banco, da mais nova pra mais velha (limite de 100 para não travar o celular do usuário)
-    const listaMaterias = await Materia.find()
-      .sort({ dataCriacao: -1 })
-      .limit(100);
-    res.json(listaMaterias);
-  } catch (error) {
-    console.error("Erro ao buscar matérias:", error);
-    res.status(500).json([]);
-  }
+  // Faz a matemática para saber quantos dias se passaram
+  const diferencaTempo = hoje.getTime() - dataContratacao.getTime();
+  const diasTecnico = Math.floor(diferencaTempo / (1000 * 3600 * 24));
+
+  res.json({
+    dias: dadosContador.dias,
+    mentiras: dadosContador.mentiras,
+    diasTecnico: diasTecnico, // Agora o valor vai sempre atualizado!
+  });
 });
 
 // Configuração do E-mail
