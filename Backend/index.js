@@ -30,12 +30,6 @@ const materiaSchema = new mongoose.Schema({
 
 const Materia = mongoose.model("Materia", materiaSchema);
 
-// Dados fixos do contador
-const dadosFixos = {
-  diasSAF: 1000,
-  mentiras: 13,
-};
-
 // ----------------------------------------------------
 // 🤖 PULGUINHA: BUSCA E SALVA NO BANCO
 // ----------------------------------------------------
@@ -112,15 +106,24 @@ buscarNoticiasAutomaticas();
 // ----------------------------------------------------
 
 app.get("/api/contador", (req, res) => {
-  // DATA DE CONTRATAÇÃO: 24/02/2026
-  const dataInicioTecnico = new Date("2026-02-24T00:00:00-03:00");
   const hoje = new Date();
-  const diffTime = Math.abs(hoje - dataInicioTecnico);
-  const diasTecnico = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  // 1. CÁLCULO AUTOMÁTICO DOS DIAS DA SAF (Início oficial: 01/11/2023)
+  const dataInicioSAF = new Date("2023-11-01T00:00:00-03:00");
+  const diffSAF = Math.abs(hoje - dataInicioSAF);
+  const diasSAF = Math.floor(diffSAF / (1000 * 60 * 60 * 24));
+
+  // 2. CÁLCULO AUTOMÁTICO DO TÉCNICO (Contratação: 24/02/2026)
+  const dataInicioTecnico = new Date("2026-02-24T00:00:00-03:00");
+  const diffTecnico = Math.abs(hoje - dataInicioTecnico);
+  const diasTecnico = Math.floor(diffTecnico / (1000 * 60 * 60 * 24));
+
+  // 3. PROMESSAS QUEBRADAS (Altere este número quando quiser)
+  const totalPromessasQuebradas = 27;
 
   res.json({
-    dias: dadosFixos.diasSAF,
-    mentiras: dadosFixos.mentiras,
+    dias: diasSAF,
+    mentiras: totalPromessasQuebradas,
     diasTecnico: diasTecnico,
   });
 });
