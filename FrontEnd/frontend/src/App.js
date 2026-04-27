@@ -203,7 +203,7 @@ export default function App() {
     <div>
       <img src="/galo.png" alt="Escudo do Galo" className="bg-galo" />
 
-      {/* MODAL CAMPANHA INICIAL */}
+      {/* 👇 MODAL: CENTRAL DE PROTESTOS INICIAL 👇 */}
       {modalCampanhaAberto && (
         <div
           onClick={() => setModalCampanhaAberto(false)}
@@ -228,8 +228,9 @@ export default function App() {
               backgroundColor: "rgba(17, 17, 17, 0.85)",
               border: "2px solid #FF4444",
               borderRadius: "10px",
-              maxWidth: "500px",
-              width: "100%",
+              maxWidth: "800px",
+              width:
+                "100%" /* 👈 Aumentei a largura pra caber as duas campanhas */,
               position: "relative",
               padding: "30px",
               textAlign: "center",
@@ -251,16 +252,17 @@ export default function App() {
             >
               ✖
             </button>
+
             <h2
               style={{
                 color: "#FF4444",
-                marginBottom: "15px",
+                marginBottom: "10px",
                 fontSize: "2.2rem",
                 textTransform: "uppercase",
                 textShadow: "2px 2px 4px rgba(0,0,0,0.8)",
               }}
             >
-              🚨 #SafNota0 🚨
+              🚨 CENTRAL DE PROTESTOS 🚨
             </h2>
             <p
               style={{
@@ -270,47 +272,155 @@ export default function App() {
                 lineHeight: "1.5",
               }}
             >
-              A Massa não aguenta mais! Apoie a campanha do{" "}
-              <strong>Frossard</strong> e mostre a indignação da arquibancada
-              contra a atual gestão.
+              A Massa não aguenta mais! Escolha sua frente de batalha e
+              fortaleça a resistência contra a atual gestão:
             </p>
+
+            {/* 👇 GRID COM AS DUAS CAMPANHAS LADO A LADO 👇 */}
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "20px",
+                justifyContent: "center",
+              }}
             >
-              <a
-                href="COLOQUE_O_LINK_DO_TWITTER_AQUI"
-                target="_blank"
-                rel="noopener noreferrer"
+              {/* CAMPANHA 1: Frossard */}
+              <div
                 style={{
-                  backgroundColor: "#1DA1F2",
-                  color: "#fff",
-                  padding: "12px",
-                  borderRadius: "5px",
-                  textDecoration: "none",
-                  fontWeight: "bold",
-                  fontSize: "1.1rem",
+                  flex: "1 1 300px",
+                  backgroundColor: "#222",
+                  padding: "20px",
+                  borderRadius: "8px",
+                  border: "1px solid #444",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
-                🐦 Ver o vídeo no X (Twitter)
-              </a>
-              <a
-                href="COLOQUE_O_LINK_DO_INSTAGRAM_AQUI"
-                target="_blank"
-                rel="noopener noreferrer"
+                <h3
+                  style={{
+                    color: "#FFD700",
+                    margin: "0 0 10px 0",
+                    fontSize: "1.3rem",
+                  }}
+                >
+                  #SafNota0
+                </h3>
+                <p
+                  style={{
+                    color: "#ccc",
+                    fontSize: "0.95rem",
+                    marginBottom: "20px",
+                    flex: 1,
+                  }}
+                >
+                  Apoie a campanha do <strong>Frossard</strong> e mostre a
+                  indignação da arquibancada nas redes sociais.
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                  }}
+                >
+                  <a
+                    href="COLOQUE_O_LINK_DO_TWITTER_AQUI"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      backgroundColor: "#1DA1F2",
+                      color: "#fff",
+                      padding: "10px",
+                      borderRadius: "5px",
+                      textDecoration: "none",
+                      fontWeight: "bold",
+                      fontSize: "1rem",
+                    }}
+                  >
+                    🐦 Ver vídeo no X
+                  </a>
+                  <a
+                    href="COLOQUE_O_LINK_DO_INSTAGRAM_AQUI"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      background:
+                        "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
+                      color: "#fff",
+                      padding: "10px",
+                      borderRadius: "5px",
+                      textDecoration: "none",
+                      fontWeight: "bold",
+                      fontSize: "1rem",
+                    }}
+                  >
+                    📸 Ver no Instagram
+                  </a>
+                </div>
+              </div>
+
+              {/* CAMPANHA 2: Culture_1908 */}
+              <div
                 style={{
-                  background:
-                    "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
-                  color: "#fff",
-                  padding: "12px",
-                  borderRadius: "5px",
-                  textDecoration: "none",
-                  fontWeight: "bold",
-                  fontSize: "1.1rem",
+                  flex: "1 1 300px",
+                  backgroundColor: "#222",
+                  padding: "20px",
+                  borderRadius: "8px",
+                  border: "1px solid #444",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
-                📸 Ver o vídeo no Instagram
-              </a>
+                <h3
+                  style={{
+                    color: "#FFD700",
+                    margin: "0 0 10px 0",
+                    fontSize: "1.3rem",
+                  }}
+                >
+                  Adesivaço BH
+                </h3>
+                <p
+                  style={{
+                    color: "#ccc",
+                    fontSize: "0.95rem",
+                    marginBottom: "20px",
+                    flex: 1,
+                  }}
+                >
+                  Ação da <strong>Culture_1908</strong>. Ajude a capitalizar e
+                  lotar Belo Horizonte com os stickers do protesto.
+                </p>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <a
+                    href="https://x.com/culture_1908/status/2048826752756019334?s=20"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      backgroundColor: "#000",
+                      border: "1px solid #1DA1F2",
+                      color: "#1DA1F2",
+                      padding: "10px",
+                      borderRadius: "5px",
+                      textDecoration: "none",
+                      fontWeight: "bold",
+                      fontSize: "1rem",
+                    }}
+                  >
+                    🖤 Apoiar Campanha no X
+                  </a>
+                </div>
+              </div>
             </div>
+
             <button
               onClick={() => setModalCampanhaAberto(false)}
               style={{
