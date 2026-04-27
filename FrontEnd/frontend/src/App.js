@@ -307,7 +307,7 @@ export default function App() {
                   Apoie a campanha do Frossard nas redes sociais.
                 </p>
                 <a
-                  href="https://x.com/frossard"
+                  href="https://x.com/canaldofrossard/status/2048779423336353823?s=20"
                   target="_blank"
                   rel="noreferrer"
                   style={{
@@ -324,7 +324,7 @@ export default function App() {
                   X (Twitter)
                 </a>
                 <a
-                  href="https://instagram.com/frossard"
+                  href="https://www.instagram.com/reel/DXo6CCOAWcz/?igsh=NWRsZ3hsbnhleTZ0"
                   target="_blank"
                   rel="noreferrer"
                   style={{
