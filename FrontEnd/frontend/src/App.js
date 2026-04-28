@@ -112,18 +112,18 @@ export default function App() {
     },
     {
       data: "Novembro / 2023",
-      titulo: "Assunção Oficial",
+      titulo: "Oficialização da SAF",
       desc: "A SAF passa a comandar oficialmente o clube. Começa o 'relógio' da gestão.",
     },
     {
       data: "Dezembro / 2024",
       titulo: "Fracasso Esportivo",
-      desc: "Após um ano de altos e baixos, perda das finais da Copa do Brasil e Libertadores.",
+      desc: "Após um ano de altos e baixos, perda das finais da Copa do Brasil e Libertadores, o galo quase foi rebaixado.",
     },
     {
       data: "Ano de 2025",
       titulo: "Atrasos e Protestos",
-      desc: "Elenco sofre com atrasos salariais e de imagem. Trocas sucessivas de técnicos.",
+      desc: "Elenco sofre com atrasos salariais e de imagem. Trocas sucessivas de técnicos e quase foi rebaixado.",
     },
     {
       data: "Fevereiro / 2026",
@@ -133,7 +133,7 @@ export default function App() {
     {
       data: "Abril / 2026",
       titulo: "O Estopim da Massa",
-      desc: "Goleada para o Flamengo. Protestos pesados contra os donos da SAF e jogadores. Campanha #SafNota0.",
+      desc: "Goleada para o Flamengo, omissão e protestos contra os donos da SAF e jogadores. Campanha #SAFNota0!.",
     },
   ];
 
@@ -304,7 +304,7 @@ export default function App() {
                     fontSize: "1.3rem",
                   }}
                 >
-                  #SafNota0
+                  #SAFNota0!
                 </h3>
                 <p
                   style={{
