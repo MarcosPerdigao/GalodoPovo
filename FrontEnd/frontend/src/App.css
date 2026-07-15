@@ -404,3 +404,22 @@ body {
   border-radius: 5px;
   animation: pulse 2s infinite;
 }
+
+section {
+  position: relative;
+  z-index: 10;
+}
+
+input,
+textarea,
+button {
+  font-family: inherit;
+}
+
+button {
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  opacity: 0.95;
+}
