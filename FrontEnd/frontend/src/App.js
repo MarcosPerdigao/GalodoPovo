@@ -104,42 +104,66 @@ export default function App() {
       setErroApi("");
 
       try {
-        const [resMaterias, resHome] = await Promise.all([
-          fetch(`${API_BASE}/api/materias?page=1&limit=100`),
-          fetch(`${API_BASE}/api/home`),
+        const [materiasResultado, homeResultado] = await Promise.allSettled([
+          fetch(`${API_BASE}/api/materias?page=1&limit=100`).then(
+            async (resMaterias) => {
+              if (!resMaterias.ok) {
+                throw new Error("Não foi possível carregar as matérias.");
+              }
+
+              return resMaterias.json();
+            },
+          ),
+          fetch(`${API_BASE}/api/home`).then(async (resHome) => {
+            if (!resHome.ok) {
+              throw new Error("Não foi possível carregar os dados da home.");
+            }
+
+            return resHome.json();
+          }),
         ]);
 
-        if (!resMaterias.ok || !resHome.ok) {
-          throw new Error("Não foi possível carregar os dados do site.");
+        if (materiasResultado.status === "fulfilled") {
+          const dataMaterias = materiasResultado.value;
+
+          setMaterias(
+            Array.isArray(dataMaterias)
+              ? dataMaterias
+              : dataMaterias.itens || [],
+          );
+        } else {
+          console.error(
+            "Erro ao carregar matérias:",
+            materiasResultado.reason,
+          );
         }
 
-        const dataMaterias = await resMaterias.json();
-        const dataHome = await resHome.json();
+        if (homeResultado.status === "fulfilled") {
+          const dataHome = homeResultado.value;
 
-        setMaterias(
-          Array.isArray(dataMaterias) ? dataMaterias : dataMaterias.itens || [],
-        );
+          setContador(
+            dataHome.contador || { dias: 0, diasTecnico: 0, mentiras: 0 },
+          );
+          setMudancasSemana(dataHome.resumoSemana || []);
+          setPromessasDestaqueData(dataHome.promessasDestaque || []);
+          setPromessasData(dataHome.promessas || []);
+          setTecnicosData(dataHome.tecnicos || []);
+          setLinhaDoTempoData(dataHome.linhaDoTempo || []);
+        } else {
+          console.error(
+            "Erro ao carregar dados da home:",
+            homeResultado.reason,
+          );
+        }
 
-        setContador(
-          dataHome.contador || { dias: 0, diasTecnico: 0, mentiras: 0 },
-        );
-        setMudancasSemana(dataHome.resumoSemana || []);
-        setPromessasDestaqueData(dataHome.promessasDestaque || []);
-        setPromessasData(dataHome.promessas || []);
-        setTecnicosData(dataHome.tecnicos || []);
-        setLinhaDoTempoData(dataHome.linhaDoTempo || []);
-      } catch (error) {
-        console.error(error);
-        setErroApi(
-          "Não foi possível carregar o dossiê agora. Tente novamente em instantes.",
-        );
-        setMaterias([]);
-        setContador({ dias: 0, diasTecnico: 0, mentiras: 0 });
-        setMudancasSemana([]);
-        setPromessasDestaqueData([]);
-        setPromessasData([]);
-        setTecnicosData([]);
-        setLinhaDoTempoData([]);
+        if (
+          materiasResultado.status === "rejected" &&
+          homeResultado.status === "rejected"
+        ) {
+          setErroApi(
+            "Não foi possível carregar o dossiê agora. Tente novamente em instantes.",
+          );
+        }
       } finally {
         setCarregando(false);
       }
