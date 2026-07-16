@@ -29,6 +29,7 @@ export default function App() {
   const [modalTecnicosAberto, setModalTecnicosAberto] = useState(false);
   const [modalCampanhaAberto, setModalCampanhaAberto] = useState(false);
   const [jurosRodando, setJurosRodando] = useState(0);
+  const [cabecalhoCompacto, setCabecalhoCompacto] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [erroApi, setErroApi] = useState("");
   const [formulario, setFormulario] = useState({
@@ -82,7 +83,7 @@ export default function App() {
     };
 
     calcularJuros();
-    const intervaloJuros = setInterval(calcularJuros, 1000);
+    const intervaloJuros = setInterval(calcularJuros, 60000);
 
     return () => clearInterval(intervaloJuros);
   }, []);
@@ -90,7 +91,19 @@ export default function App() {
   const jurosFormatado = new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
+    maximumFractionDigits: 0,
   }).format(jurosRodando);
+
+  useEffect(() => {
+    const atualizarCabecalho = () => {
+      setCabecalhoCompacto(window.scrollY > 48);
+    };
+
+    atualizarCabecalho();
+    window.addEventListener("scroll", atualizarCabecalho, { passive: true });
+
+    return () => window.removeEventListener("scroll", atualizarCabecalho);
+  }, []);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -161,7 +174,7 @@ export default function App() {
           homeResultado.status === "rejected"
         ) {
           setErroApi(
-            "Não foi possível carregar o dossiê agora. Tente novamente em instantes.",
+            "N\u00e3o foi poss\u00edvel carregar o dossi\u00ea agora. Tente novamente em instantes.",
           );
         }
       } finally {
@@ -286,7 +299,13 @@ export default function App() {
 
     const secaoDossie = document.getElementById("inicio-dossie");
     if (secaoDossie) {
-      secaoDossie.scrollIntoView({ behavior: "smooth", block: "start" });
+      const reduzirMovimento = window.matchMedia?.(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      secaoDossie.scrollIntoView({
+        behavior: reduzirMovimento ? "auto" : "smooth",
+        block: "start",
+      });
     }
   };
 
@@ -348,6 +367,47 @@ export default function App() {
         nao_prioridade: 0,
       }
     );
+  };
+
+  const tecnicosOrdenados = useMemo(() => {
+    const atual = tecnicosData.filter((tecnico) => tecnico.motivo === "Em cargo");
+    const anteriores = tecnicosData
+      .filter((tecnico) => tecnico.motivo !== "Em cargo")
+      .slice()
+      .reverse();
+
+    return [...atual, ...anteriores];
+  }, [tecnicosData]);
+
+  const getStatusClassName = (status = "") => {
+    const statusNormalizado = status.toLowerCase();
+
+    if (statusNormalizado.includes("descumpr")) {
+      return "status-marker status-marker--critical";
+    }
+
+    if (
+      statusNormalizado.includes("parcial") ||
+      statusNormalizado.includes("verifica") ||
+      statusNormalizado.includes("cobran")
+    ) {
+      return "status-marker status-marker--attention";
+    }
+
+    return "status-marker";
+  };
+
+  const navegarParaSecao = (id) => {
+    const secao = document.getElementById(id);
+    if (secao) {
+      const reduzirMovimento = window.matchMedia?.(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      secao.scrollIntoView({
+        behavior: reduzirMovimento ? "auto" : "smooth",
+        block: "start",
+      });
+    }
   };
 
   const handleVotarPromessa = async (itemId, voto) => {
@@ -907,1643 +967,632 @@ export default function App() {
     );
   }
   return (
-    <div>
-      <img src="/galo.png" alt="Escudo do Galo" className="bg-galo" />
-
+    <div className="public-page">
       {modalCampanhaAberto && (
         <div
+          className="modal-backdrop"
           onClick={() => setModalCampanhaAberto(false)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "rgba(0,0,0,0.65)",
-            backdropFilter: "blur(4px)",
-            zIndex: 10000,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "20px",
-          }}
         >
-          <div
+          <section
+            className="modal-panel modal-panel--campaign"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="campanhas-titulo"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: "rgba(17, 17, 17, 0.92)",
-              border: "2px solid #FF4444",
-              borderRadius: "10px",
-              maxWidth: "800px",
-              width: "100%",
-              position: "relative",
-              padding: "30px",
-              textAlign: "center",
-              boxShadow: "0 0 30px rgba(255, 68, 68, 0.5)",
-            }}
           >
             <button
+              type="button"
+              className="modal-close"
+              aria-label="Fechar central de protestos"
               onClick={() => setModalCampanhaAberto(false)}
-              style={{
-                position: "absolute",
-                top: "15px",
-                right: "20px",
-                background: "none",
-                border: "none",
-                color: "#FF4444",
-                fontSize: "1.5rem",
-                cursor: "pointer",
-              }}
             >
-              ✖
+              x
             </button>
 
-            <h2
-              style={{
-                color: "#FF4444",
-                marginBottom: "10px",
-                fontSize: "2rem",
-                textTransform: "uppercase",
-              }}
-            >
-              Central de Protestos
-            </h2>
-
-            <p
-              style={{
-                color: "#fff",
-                fontSize: "1.05rem",
-                marginBottom: "25px",
-                lineHeight: "1.5",
-              }}
-            >
-              A Massa não aguenta mais. Escolha sua frente de batalha e
-              fortaleça a resistência contra a atual gestão.
+            <p className="section-kicker">Central de protestos</p>
+            <h2 id="campanhas-titulo">{"Campanhas e mobiliza\u00e7\u00f5es"}</h2>
+            <p className="section-lead">
+              Acessos reunidos para quem quer acompanhar ou participar das
+              {"campanhas j\u00e1 cadastradas."}
             </p>
 
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "20px",
-                justifyContent: "center",
-              }}
-            >
-              <div
-                style={{
-                  flex: "1 1 300px",
-                  backgroundColor: "#222",
-                  padding: "20px",
-                  borderRadius: "8px",
-                  border: "1px solid #444",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <h3
-                  style={{
-                    color: "#FFD700",
-                    margin: "0 0 10px 0",
-                    fontSize: "1.3rem",
-                  }}
-                >
-                  #SAFNota0!
-                </h3>
-
-                <p
-                  style={{
-                    color: "#ccc",
-                    fontSize: "0.95rem",
-                    marginBottom: "20px",
-                    flex: 1,
-                  }}
-                >
+            <div className="campaign-grid">
+              <article className="campaign-item">
+                <h3>#SAFNota0!</h3>
+                <p>
                   Apoie a campanha do <strong>Frossard</strong> e mostre a
-                  indignação da arquibancada nas redes sociais.
+                  {"indigna\u00e7\u00e3o"} da arquibancada nas redes sociais.
                 </p>
-
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
-                  }}
-                >
+                <div className="campaign-links">
                   <a
                     href="https://x.com/canaldofrossard/status/2048779423336353823?s=20"
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{
-                      backgroundColor: "#1DA1F2",
-                      color: "#fff",
-                      padding: "10px",
-                      borderRadius: "5px",
-                      textDecoration: "none",
-                      fontWeight: "bold",
-                      fontSize: "1rem",
-                    }}
                   >
-                    Ver vídeo no X
+                    {"Ver v\u00eddeo no X"}
                   </a>
-
                   <a
                     href="https://www.instagram.com/reel/DXo6CCOAWcz/?igsh=NWRsZ3hsbnhleTZ0"
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{
-                      background:
-                        "linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)",
-                      color: "#fff",
-                      padding: "10px",
-                      borderRadius: "5px",
-                      textDecoration: "none",
-                      fontWeight: "bold",
-                      fontSize: "1rem",
-                    }}
                   >
                     Ver no Instagram
                   </a>
                 </div>
-              </div>
+              </article>
 
-              <div
-                style={{
-                  flex: "1 1 300px",
-                  backgroundColor: "#222",
-                  padding: "20px",
-                  borderRadius: "8px",
-                  border: "1px solid #444",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <h3
-                  style={{
-                    color: "#FFD700",
-                    margin: "0 0 10px 0",
-                    fontSize: "1.3rem",
-                  }}
-                >
-                  Adesivaço BH
-                </h3>
-
-                <p
-                  style={{
-                    color: "#ccc",
-                    fontSize: "0.95rem",
-                    marginBottom: "20px",
-                    flex: 1,
-                  }}
-                >
-                  Ação da <strong>Culture_1908</strong>. Ajude a capitalizar e
-                  lotar Belo Horizonte com os stickers do protesto.
+              <article className="campaign-item">
+                <h3>{"Adesiva\u00e7o BH"}</h3>
+                <p>
+                  {"A\u00e7\u00e3o da "}<strong>Culture_1908</strong>.
+                  {" Ajude a capitalizar e lotar Belo Horizonte com os stickers do protesto."}
                 </p>
-
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
-                    justifyContent: "flex-end",
-                  }}
-                >
+                <div className="campaign-links">
                   <a
                     href="https://x.com/culture_1908/status/2048826752756019334?s=20"
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{
-                      backgroundColor: "#000",
-                      border: "1px solid #1DA1F2",
-                      color: "#1DA1F2",
-                      padding: "10px",
-                      borderRadius: "5px",
-                      textDecoration: "none",
-                      fontWeight: "bold",
-                      fontSize: "1rem",
-                    }}
                   >
                     Apoiar campanha no X
                   </a>
                 </div>
-              </div>
+              </article>
             </div>
-          </div>
+          </section>
         </div>
       )}
 
       {modalPromessasAberto && (
         <div
+          className="modal-backdrop"
           onClick={() => setModalPromessasAberto(false)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "rgba(0,0,0,0.9)",
-            zIndex: 9999,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "20px",
-          }}
         >
-          <div
+          <section
+            className="modal-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="promessas-modal-titulo"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: "#111",
-              border: "2px solid #FFD700",
-              borderRadius: "10px",
-              maxWidth: "600px",
-              width: "100%",
-              maxHeight: "80vh",
-              overflowY: "auto",
-              position: "relative",
-              padding: "30px",
-            }}
           >
             <button
+              type="button"
+              className="modal-close"
+              aria-label="Fechar lista de promessas"
               onClick={() => setModalPromessasAberto(false)}
-              style={{
-                position: "absolute",
-                top: "15px",
-                right: "20px",
-                background: "none",
-                border: "none",
-                color: "#FFD700",
-                fontSize: "1.5rem",
-                cursor: "pointer",
-              }}
             >
-              ✖
+              x
             </button>
 
-            <h2
-              style={{
-                color: "#FFD700",
-                borderBottom: "1px solid #333",
-                paddingBottom: "15px",
-                marginBottom: "20px",
-              }}
-            >
-              Promessas consolidadas
-            </h2>
+            <p className="section-kicker">Arquivo de compromissos</p>
+            <h2 id="promessas-modal-titulo">Promessas consolidadas</h2>
 
             {promessasData.length === 0 ? (
-              <p style={{ color: "#aaa" }}>
-                Nenhuma promessa disponível no momento.
-              </p>
+              <p className="empty-state">{"Nenhuma promessa dispon\u00edvel no momento."}</p>
             ) : (
-              promessasData.map((p, i) => (
-                <div
-                  key={i}
-                  style={{
-                    backgroundColor: "#222",
-                    padding: "15px",
-                    margin: "10px 0",
-                    borderRadius: "5px",
-                    borderLeft: "4px solid #FF4444",
-                    color: "#fff",
-                  }}
-                >
-                  <h3
-                    style={{
-                      margin: "0 0 8px 0",
-                      color: "#FFD700",
-                      fontSize: "1.1rem",
-                    }}
-                  >
-                    {i + 1}. {p.titulo}
-                  </h3>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "0.9rem",
-                      color: "#ccc",
-                      lineHeight: "1.5",
-                    }}
-                  >
-                    <strong>Situação hoje:</strong> {p.situacao}
-                  </p>
-                </div>
-              ))
+              <div className="document-list">
+                {promessasData.map((p, i) => (
+                  <article className="document-row" key={p._id || p.id || i}>
+                    <div className="record-code">REG-{String(i + 1).padStart(2, "0")}</div>
+                    <div>
+                      {p.status && (
+                        <span className={getStatusClassName(p.status)}>
+                          {p.status}
+                        </span>
+                      )}
+                      <h3>{p.titulo}</h3>
+                      {p.resumo && <p>{p.resumo}</p>}
+                      {p.situacao && (
+                        <p className="document-note">
+                          <strong>{"Situa\u00e7\u00e3o hoje:"}</strong> {p.situacao}
+                        </p>
+                      )}
+                    </div>
+                  </article>
+                ))}
+              </div>
             )}
-          </div>
+          </section>
         </div>
       )}
 
       {modalTecnicosAberto && (
         <div
+          className="modal-backdrop"
           onClick={() => setModalTecnicosAberto(false)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            backgroundColor: "rgba(0,0,0,0.9)",
-            zIndex: 9999,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: "20px",
-          }}
         >
-          <div
+          <section
+            className="modal-panel"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tecnicos-modal-titulo"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: "#111",
-              border: "2px solid #FFD700",
-              borderRadius: "10px",
-              maxWidth: "600px",
-              width: "100%",
-              maxHeight: "80vh",
-              overflowY: "auto",
-              position: "relative",
-              padding: "30px",
-            }}
           >
             <button
+              type="button"
+              className="modal-close"
+              aria-label={"Fechar lista de t\u00e9cnicos"}
               onClick={() => setModalTecnicosAberto(false)}
-              style={{
-                position: "absolute",
-                top: "15px",
-                right: "20px",
-                background: "none",
-                border: "none",
-                color: "#FFD700",
-                fontSize: "1.5rem",
-                cursor: "pointer",
-              }}
             >
-              ✖
+              x
             </button>
 
-            <h2
-              style={{
-                color: "#FFD700",
-                borderBottom: "1px solid #333",
-                paddingBottom: "15px",
-                marginBottom: "20px",
-              }}
-            >
-              Rotatividade de Técnicos (Era SAF)
-            </h2>
+            <p className="section-kicker">{"Rotatividade t\u00e9cnica"}</p>
+            <h2 id="tecnicos-modal-titulo">{"T\u00e9cnicos da era SAF"}</h2>
 
-            {tecnicosData.length === 0 ? (
-              <p style={{ color: "#aaa" }}>
-                Nenhum técnico disponível no momento.
-              </p>
+            {tecnicosOrdenados.length === 0 ? (
+              <p className="empty-state">{"Nenhum t\u00e9cnico dispon\u00edvel no momento."}</p>
             ) : (
-              tecnicosData.map((t, i) => (
-                <div
-                  key={i}
-                  style={{
-                    backgroundColor: "#222",
-                    padding: "15px",
-                    margin: "10px 0",
-                    borderRadius: "5px",
-                    borderLeft:
+              <div className="document-list">
+                {tecnicosOrdenados.map((t, i) => (
+                  <article
+                    className={
                       t.motivo === "Em cargo"
-                        ? "4px solid #228B22"
-                        : "4px solid #FF4444",
-                    color: "#fff",
-                  }}
-                >
-                  <h3 style={{ margin: "0 0 5px 0", color: "#FFD700" }}>
-                    {t.nome}
-                  </h3>
-                  <p style={{ margin: 0, fontSize: "0.9rem" }}>
-                    Período: {t.periodo}
-                  </p>
-                  <p style={{ margin: 0, fontSize: "0.9rem" }}>
-                    Duração: <strong>{t.dias}</strong>
-                  </p>
-                  <p
-                    style={{
-                      margin: "5px 0 0 0",
-                      fontSize: "0.8rem",
-                      color: t.motivo === "Em cargo" ? "#00FF00" : "#FF4444",
-                      fontWeight: "bold",
-                    }}
+                        ? "coach-row coach-row--current"
+                        : "coach-row"
+                    }
+                    key={`${t.nome}-${t.periodo}-${i}`}
                   >
-                    {t.motivo.toUpperCase()}
-                  </p>
-                </div>
-              ))
+                    <div className="coach-heading">
+                      <h3>{t.nome}</h3>
+                      {t.motivo === "Em cargo" && (
+                        <span className="current-marker">ATUAL</span>
+                      )}
+                    </div>
+                    <dl className="coach-meta">
+                      <div>
+                        <dt>{"Per\u00edodo"}</dt>
+                        <dd>{t.periodo}</dd>
+                      </div>
+                      <div>
+                        <dt>{"Dura\u00e7\u00e3o"}</dt>
+                        <dd>{t.dias}</dd>
+                      </div>
+                      <div>
+                        <dt>Motivo</dt>
+                        <dd>{t.motivo}</dd>
+                      </div>
+                    </dl>
+                  </article>
+                ))}
+              </div>
             )}
-          </div>
+          </section>
         </div>
       )}
 
-      <header className="header-protesto">
-        <div
-          style={{
-            maxWidth: "1100px",
-            margin: "0 auto",
-            padding: "20px 20px 10px 20px",
-          }}
-        >
-          <p
-            style={{
-              color: "#FFD700",
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-              fontSize: "0.85rem",
-              fontWeight: "bold",
-              marginBottom: "10px",
-            }}
-          >
-            Observatório da SAF do Atlético-MG
-          </p>
+      <header className={cabecalhoCompacto ? "site-header is-compact" : "site-header"}>
+        <div className="site-header__inner">
+          <a className="brand" href="#topo" aria-label={"GALO DO POVO - in\u00edcio"}>
+            <span className="brand__mark">GdP</span>
+            <span className="brand__text">
+              <strong>GALO DO POVO</strong>
+              <small>Arquivo independente</small>
+            </span>
+          </a>
 
-          <h1
-            style={{
-              fontSize: "clamp(2rem, 5vw, 3.4rem)",
-              lineHeight: "1.1",
-              marginBottom: "14px",
-              textTransform: "none",
-            }}
-          >
-            A SAF prometeu. O Galo do Povo registra, organiza e cobra.
-          </h1>
-
-          <p
-            style={{
-              color: "#d0d0d0",
-              maxWidth: "850px",
-              margin: "0 auto 22px auto",
-              lineHeight: "1.7",
-              fontSize: "1.05rem",
-            }}
-          >
-            Um monitor independente da gestão da SAF do Atlético-MG: promessas,
-            notícias, documentos, linha do tempo e prioridades de cobrança da
-            Massa.
-          </p>
-
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "12px",
-              flexWrap: "wrap",
-              marginBottom: "28px",
-            }}
-          >
-            <button
-              onClick={() => {
-                const secao = document.getElementById("placar-saf");
-                if (secao) secao.scrollIntoView({ behavior: "smooth" });
-              }}
-              style={{
-                backgroundColor: "#FFD700",
-                color: "#111",
-                border: "none",
-                borderRadius: "8px",
-                padding: "12px 18px",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              Ver placar da SAF
-            </button>
-
-            <button
-              onClick={() => setModalPromessasAberto(true)}
-              style={{
-                backgroundColor: "transparent",
-                color: "#fff",
-                border: "1px solid #555",
-                borderRadius: "8px",
-                padding: "12px 18px",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              Ver promessas mapeadas
-            </button>
-
-            <button
-              onClick={() => {
-                const secao = document.getElementById("form-massa");
-                if (secao) secao.scrollIntoView({ behavior: "smooth" });
-              }}
-              style={{
-                backgroundColor: "transparent",
-                color: "#fff",
-                border: "1px solid #555",
-                borderRadius: "8px",
-                padding: "12px 18px",
-                fontWeight: "bold",
-                cursor: "pointer",
-              }}
-            >
-              Enviar informação
-            </button>
-          </div>
-
-          <div
-            id="placar-saf"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-              gap: "14px",
-              marginTop: "10px",
-            }}
-          >
-            <div
-              style={{
-                background: "rgba(20,20,20,0.95)",
-                border: "1px solid #333",
-                borderRadius: "10px",
-                padding: "18px",
-              }}
-            >
-              <p
-                style={{
-                  color: "#999",
-                  fontSize: "0.85rem",
-                  marginBottom: "8px",
-                }}
-              >
-                Dias sob SAF
-              </p>
-              <h3 style={{ color: "#fff", fontSize: "1.8rem", margin: 0 }}>
-                {contador.dias}
-              </h3>
-            </div>
-
-            <div
-              style={{
-                background: "rgba(20,20,20,0.95)",
-                border: "1px solid #333",
-                borderRadius: "10px",
-                padding: "18px",
-              }}
-            >
-              <p
-                style={{
-                  color: "#999",
-                  fontSize: "0.85rem",
-                  marginBottom: "8px",
-                }}
-              >
-                Promessas mapeadas
-              </p>
-              <h3 style={{ color: "#FFD700", fontSize: "1.8rem", margin: 0 }}>
-                {contador.mentiras || promessasData.length}
-              </h3>
-            </div>
-
-            <div
-              onClick={() => setModalTecnicosAberto(true)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  setModalTecnicosAberto(true);
-                }
-              }}
-              style={{
-                background: "rgba(20,20,20,0.95)",
-                border: "1px solid #333",
-                borderRadius: "10px",
-                padding: "18px",
-                cursor: "pointer",
-              }}
-            >
-              <p
-                style={{
-                  color: "#999",
-                  fontSize: "0.85rem",
-                  marginBottom: "8px",
-                }}
-              >
-                Técnicos trocados ↗
-              </p>
-              <h3 style={{ color: "#FF6B6B", fontSize: "1.8rem", margin: 0 }}>
-                {tecnicosTrocados}
-              </h3>
-            </div>
-
-            <div
-              onClick={() => setModalTecnicosAberto(true)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  setModalTecnicosAberto(true);
-                }
-              }}
-              style={{
-                background: "rgba(20,20,20,0.95)",
-                border: "1px solid #333",
-                borderRadius: "10px",
-                padding: "18px",
-                cursor: "pointer",
-              }}
-            >
-              <p
-                style={{
-                  color: "#999",
-                  fontSize: "0.85rem",
-                  marginBottom: "8px",
-                }}
-              >
-                Técnico atual há ↗
-              </p>
-              <h3 style={{ color: "#fff", fontSize: "1.8rem", margin: 0 }}>
-                {contador.diasTecnico} dias
-              </h3>
-            </div>
-          </div>
-          <div
-            style={{
-              marginTop: "18px",
-              background:
-                "linear-gradient(135deg, rgba(120,0,0,0.95) 0%, rgba(40,0,0,0.98) 100%)",
-              border: "1px solid rgba(255,80,80,0.45)",
-              borderRadius: "14px",
-              padding: "26px 20px",
-              boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
-              textAlign: "center",
-            }}
-          >
-            <p
-              style={{
-                color: "#ff9b9b",
-                textTransform: "uppercase",
-                fontSize: "0.82rem",
-                fontWeight: "bold",
-                letterSpacing: "1.2px",
-                marginBottom: "10px",
-              }}
-            >
-              Impacto financeiro da gestão
-            </p>
-
-            <h2
-              style={{
-                color: "#fff",
-                fontSize: "clamp(1.8rem, 5vw, 3.2rem)",
-                margin: "0 0 8px 0",
-                lineHeight: "1.1",
-                fontWeight: "900",
-              }}
-            >
-              {jurosFormatado}
-            </h2>
-
-            <p
-              style={{
-                color: "#ffd7d7",
-                fontSize: "1rem",
-                margin: "0 0 8px 0",
-                lineHeight: "1.5",
-              }}
-            >
-              já consumidos em juros estimados no ano atual
-            </p>
-
-            <p
-              style={{
-                color: "#c9a7a7",
-                fontSize: "0.82rem",
-                margin: 0,
-                lineHeight: "1.5",
-              }}
-            >
-              Base de cálculo: R$ 250 milhões por ano, proporcionais ao tempo
-              decorrido no ano atual.
-            </p>
-          </div>
+          <nav className="site-nav" aria-label={"Navega\u00e7\u00e3o principal"}>
+            <a href="#placar-saf">Placar</a>
+            <a href="#promessas">Promessas</a>
+            <a href="#linha-do-tempo">Linha do tempo</a>
+            <a href="#inicio-dossie">{"Dossi\u00ea"}</a>
+            <a href="#form-massa">{"Enviar informa\u00e7\u00e3o"}</a>
+          </nav>
         </div>
       </header>
-      <section
-        style={{
-          maxWidth: "1100px",
-          margin: "34px auto 10px auto",
-          padding: "0 20px",
-          position: "relative",
-          zIndex: 10,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            gap: "20px",
-            flexWrap: "wrap",
-            marginBottom: "20px",
-          }}
-        >
-          <div>
-            <p
-              style={{
-                color: "#FFD700",
-                textTransform: "uppercase",
-                letterSpacing: "1px",
-                fontSize: "0.82rem",
-                fontWeight: "bold",
-                marginBottom: "8px",
-              }}
-            >
-              Núcleo de cobrança
-            </p>
 
-            <h2
-              style={{
-                color: "#fff",
-                fontSize: "clamp(1.6rem, 4vw, 2.4rem)",
-                margin: 0,
-              }}
+      <main id="topo">
+        <section className="hero-section">
+          <div className="page-shell hero-grid">
+            <div className="hero-copy">
+              <p className="section-kicker">Registro independente da era SAF</p>
+              <h1>A SAF prometeu. O Galo do Povo registra, organiza e cobra.</h1>
+              <p className="hero-lead">
+                {"Um arquivo p\u00fablico de promessas, decis\u00f5es, not\u00edcias e acontecimentos que ajudam a acompanhar a gest\u00e3o da SAF."}
+              </p>
+              <div className="hero-actions">
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={() => navegarParaSecao("placar-saf")}
+                >
+                  Ver o placar da SAF
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  onClick={() => navegarParaSecao("inicio-dossie")}
+                >
+                  {"Explorar o dossi\u00ea"}
+                </button>
+                <button
+                  type="button"
+                  className="text-link"
+                  onClick={() => navegarParaSecao("form-massa")}
+                >
+                  {"Enviar informa\u00e7\u00e3o"}
+                </button>
+              </div>
+              <p className="independence-note">{"Iniciativa independente, sem v\u00ednculo ou representa\u00e7\u00e3o oficial do clube ou de sua SAF."}</p>
+            </div>
+
+            <aside className="hero-ledger" aria-label="Identidade editorial">
+              <div className="ledger-line">
+                <span>Arquivo</span>
+                <strong>GdP-2026</strong>
+              </div>
+              <div className="ledger-line">
+                <span>{"M\u00e9todo"}</span>
+                <strong>{"registro p\u00fablico"}</strong>
+              </div>
+              <div className="ledger-line">
+                <span>Escopo</span>
+                <strong>promessas, fatos e fontes</strong>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section className="stats-band page-shell" id="placar-saf" aria-label="Placar da SAF">
+          <div className="stat-item">
+            <span>Dias sob SAF</span>
+            <strong>{contador.dias}</strong>
+          </div>
+          <div className="stat-item">
+            <span>Promessas acompanhadas</span>
+            <strong>{contador.mentiras || promessasData.length}</strong>
+          </div>
+          <button
+            type="button"
+            className="stat-item stat-item--button"
+            onClick={() => setModalTecnicosAberto(true)}
+          >
+            <span>{"T\u00e9cnicos trocados"}</span>
+            <strong>{tecnicosTrocados}</strong>
+          </button>
+          <div className="stat-item stat-item--static">
+            <span>{"Tempo do t\u00e9cnico atual"}</span>
+            <strong>{contador.diasTecnico} dias</strong>
+          </div>
+        </section>
+
+        <section className="finance-section page-shell" aria-labelledby="financeiro-titulo">
+          <div className="finance-panel">
+            <p className="section-kicker">Estimativa financeira</p>
+            <h2 id="financeiro-titulo">{"O custo da d\u00edvida"}</h2>
+            <p className="section-lead">
+              Acompanhamento estimado dos juros ao longo de 2026.
+            </p>
+            <p className="finance-value">{jurosFormatado}</p>
+            <details>
+              <summary>{"Entenda o c\u00e1lculo"}</summary>
+              <p>
+                {"Esta \u00e9 uma estimativa editorial baseada no custo anual informado de R$ 250 milh\u00f5es em juros. O valor \u00e9 calculado proporcionalmente ao tempo transcorrido no ano e n\u00e3o representa atualiza\u00e7\u00e3o cont\u00e1bil oficial em tempo real."}
+              </p>
+              <p>{"Base utilizada no c\u00e1lculo: R$ 250 milh\u00f5es por ano."}</p>
+            </details>
+          </div>
+        </section>
+
+        <section className="section-block page-shell" id="promessas" aria-labelledby="promessas-titulo">
+          <div className="section-heading">
+            <div>
+              <p className="section-kicker">Arquivo de compromissos</p>
+              <h2 id="promessas-titulo">Promessas em destaque</h2>
+              <p className="section-lead">
+                {"Registros acompanhados com status, resumo e term\u00f4metro de"}
+                {"prioridade p\u00fablica."}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="btn btn--secondary"
+              onClick={() => setModalPromessasAberto(true)}
             >
-              Promessas em destaque
-            </h2>
+              Ver lista completa
+            </button>
           </div>
 
-          <button
-            onClick={() => setModalPromessasAberto(true)}
-            style={{
-              backgroundColor: "transparent",
-              color: "#fff",
-              border: "1px solid #555",
-              borderRadius: "8px",
-              padding: "10px 16px",
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
-            Ver lista completa
-          </button>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-            gap: "16px",
-          }}
-        >
           {promessasDestaqueData.length === 0 ? (
-            <div
-              style={{
-                background: "rgba(18,18,18,0.95)",
-                border: "1px solid #2f2f2f",
-                borderRadius: "12px",
-                padding: "18px",
-                color: "#aaa",
-              }}
-            >
-              Nenhuma promessa em destaque disponível no momento.
-            </div>
+            <p className="empty-state">{"Nenhuma promessa em destaque dispon\u00edvel no momento."}</p>
           ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-                gap: "16px",
-              }}
-            >
-              {promessasDestaqueData.map((promessa, index) => (
-                <div
-                  key={index}
-                  style={{
-                    background: "rgba(18,18,18,0.95)",
-                    border: "1px solid #2f2f2f",
-                    borderRadius: "12px",
-                    padding: "18px",
-                    boxShadow: "0 6px 18px rgba(0,0,0,0.2)",
-                    display: "flex",
-                    flexDirection: "column",
-                    minHeight: "220px",
-                  }}
-                >
-                  <div style={{ marginBottom: "14px" }}>
-                    <span
-                      style={{
-                        display: "inline-block",
-                        padding: "6px 10px",
-                        borderRadius: "999px",
-                        fontSize: "0.78rem",
-                        fontWeight: "bold",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.4px",
-                        backgroundColor:
-                          promessa.status === "Descumprida"
-                            ? "rgba(255,68,68,0.18)"
-                            : promessa.status === "Parcial"
-                              ? "rgba(255,215,0,0.16)"
-                              : "rgba(255,255,255,0.1)",
-                        color:
-                          promessa.status === "Descumprida"
-                            ? "#FF6B6B"
-                            : promessa.status === "Parcial"
-                              ? "#FFD700"
-                              : "#DDD",
-                        border:
-                          promessa.status === "Descumprida"
-                            ? "1px solid rgba(255,68,68,0.35)"
-                            : promessa.status === "Parcial"
-                              ? "1px solid rgba(255,215,0,0.35)"
-                              : "1px solid rgba(255,255,255,0.2)",
-                      }}
-                    >
-                      {promessa.status}
-                    </span>
-                  </div>
+            <div className="promise-grid">
+              {promessasDestaqueData.map((promessa, index) => {
+                const itemId = promessa.id || promessa._id || promessa.chave || String(index);
+                const totais = obterTotaisPromessa(itemId);
 
-                  <h3
-                    style={{
-                      color: "#fff",
-                      fontSize: "1.1rem",
-                      lineHeight: "1.35",
-                      margin: "0 0 12px 0",
-                    }}
-                  >
-                    {promessa.titulo}
-                  </h3>
-
-                  <p
-                    style={{
-                      color: "#c8c8c8",
-                      lineHeight: "1.6",
-                      fontSize: "0.96rem",
-                      margin: 0,
-                      flex: 1,
-                    }}
-                  >
-                    {promessa.resumo}
-                  </p>
-                  <div
-                    style={{
-                      marginTop: "16px",
-                      paddingTop: "14px",
-                      borderTop: "1px solid #2f2f2f",
-                    }}
-                  >
-                    <p
-                      style={{
-                        color: "#FFD700",
-                        fontSize: "0.82rem",
-                        fontWeight: "bold",
-                        margin: "0 0 10px 0",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.6px",
-                      }}
-                    >
-                      Termômetro da Massa
-                    </p>
-
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr",
-                        gap: "8px",
-                      }}
-                    >
-                      <button
-                        onClick={() =>
-                          handleVotarPromessa(promessa.id, "cobrar_agora")
-                        }
-                        style={{
-                          backgroundColor:
-                            votosPromessasLocais[promessa.id] === "cobrar_agora"
-                              ? "#FF4444"
-                              : "transparent",
-                          color: "#fff",
-                          border: "1px solid rgba(255,68,68,0.45)",
-                          borderRadius: "8px",
-                          padding: "10px 12px",
-                          fontWeight: "bold",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Cobrar agora
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          handleVotarPromessa(promessa.id, "importa_muito")
-                        }
-                        style={{
-                          backgroundColor:
-                            votosPromessasLocais[promessa.id] ===
-                            "importa_muito"
-                              ? "#FFD700"
-                              : "transparent",
-                          color:
-                            votosPromessasLocais[promessa.id] ===
-                            "importa_muito"
-                              ? "#111"
-                              : "#fff",
-                          border: "1px solid rgba(255,215,0,0.45)",
-                          borderRadius: "8px",
-                          padding: "10px 12px",
-                          fontWeight: "bold",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Importa muito
-                      </button>
-
-                      <button
-                        onClick={() =>
-                          handleVotarPromessa(promessa.id, "nao_prioridade")
-                        }
-                        style={{
-                          backgroundColor:
-                            votosPromessasLocais[promessa.id] ===
-                            "nao_prioridade"
-                              ? "#555"
-                              : "transparent",
-                          color: "#fff",
-                          border: "1px solid rgba(255,255,255,0.25)",
-                          borderRadius: "8px",
-                          padding: "10px 12px",
-                          fontWeight: "bold",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Não é prioridade
-                      </button>
-                    </div>
-
-                    <div
-                      style={{
-                        marginTop: "10px",
-                        display: "grid",
-                        gap: "4px",
-                        fontSize: "0.82rem",
-                        color: "#aaa",
-                      }}
-                    >
-                      <span>
-                        Cobrar agora:{" "}
-                        {obterTotaisPromessa(promessa.id).cobrar_agora}
-                      </span>
-                      <span>
-                        Importa muito:{" "}
-                        {obterTotaisPromessa(promessa.id).importa_muito}
-                      </span>
-                      <span>
-                        Não é prioridade:{" "}
-                        {obterTotaisPromessa(promessa.id).nao_prioridade}
+                return (
+                  <article className="promise-card" key={itemId}>
+                    <div className="promise-card__meta">
+                      <span className="record-code">REG-{String(index + 1).padStart(2, "0")}</span>
+                      <span className={getStatusClassName(promessa.status)}>
+                        {promessa.status || "Sob verifica\u00e7\u00e3o"}
                       </span>
                     </div>
+                    <h3>{promessa.titulo}</h3>
+                    <p>{promessa.resumo}</p>
+
+                    <div className="thermometer" aria-label={"Term\u00f4metro da promessa"}>
+                      <p>{"Term\u00f4metro"}</p>
+                      <div className="vote-buttons">
+                        <button
+                          type="button"
+                          className={
+                            votosPromessasLocais[itemId] === "cobrar_agora"
+                              ? "vote-button is-critical"
+                              : "vote-button"
+                          }
+                          onClick={() => handleVotarPromessa(itemId, "cobrar_agora")}
+                        >
+                          Cobrar agora
+                        </button>
+                        <button
+                          type="button"
+                          className={
+                            votosPromessasLocais[itemId] === "importa_muito"
+                              ? "vote-button is-attention"
+                              : "vote-button"
+                          }
+                          onClick={() => handleVotarPromessa(itemId, "importa_muito")}
+                        >
+                          Importa muito
+                        </button>
+                        <button
+                          type="button"
+                          className={
+                            votosPromessasLocais[itemId] === "nao_prioridade"
+                              ? "vote-button is-muted"
+                              : "vote-button"
+                          }
+                          onClick={() => handleVotarPromessa(itemId, "nao_prioridade")}
+                        >
+                          {"N\u00e3o \u00e9 prioridade"}
+                        </button>
+                      </div>
+                      <dl className="vote-totals">
+                        <div>
+                          <dt>Cobrar agora</dt>
+                          <dd>{totais.cobrar_agora}</dd>
+                        </div>
+                        <div>
+                          <dt>Importa muito</dt>
+                          <dd>{totais.importa_muito}</dd>
+                        </div>
+                        <div>
+                          <dt>{"N\u00e3o \u00e9 prioridade"}</dt>
+                          <dd>{totais.nao_prioridade}</dd>
+                        </div>
+                      </dl>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="btn btn--text"
+                      onClick={() => setModalPromessasAberto(true)}
+                    >
+                      Ver detalhes
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        <section className="section-block page-shell" aria-labelledby="semana-titulo">
+          <div className="section-heading">
+            <div>
+              <p className="section-kicker">{"\u00daltimos registros"}</p>
+              <h2 id="semana-titulo">O que mudou esta semana</h2>
+            </div>
+          </div>
+
+          {mudancasSemana.length === 0 ? (
+            <p className="empty-state">{"Nenhum destaque semanal dispon\u00edvel no momento."}</p>
+          ) : (
+            <div className="bulletin-list">
+              {mudancasSemana.map((item, index) => (
+                <article className="bulletin-item" key={index}>
+                  <div className="bulletin-meta">
+                    <span>{item.tag || "SAF"}</span>
+                    <span>{item.impacto || "Monitoramento"}</span>
                   </div>
+                  <h3>{item.titulo}</h3>
+                  <p>{item.resumo}</p>
                   <button
-                    onClick={() => setModalPromessasAberto(true)}
-                    style={{
-                      marginTop: "18px",
-                      backgroundColor: "transparent",
-                      color: "#FFD700",
-                      border: "1px solid rgba(255,215,0,0.35)",
-                      borderRadius: "8px",
-                      padding: "10px 14px",
-                      fontWeight: "bold",
-                      cursor: "pointer",
+                    type="button"
+                    className="btn btn--text"
+                    onClick={() => {
+                      if (item.fonteUrl) {
+                        window.open(item.fonteUrl, "_blank", "noopener,noreferrer");
+                        return;
+                      }
+                      navegarParaSecao("inicio-dossie");
                     }}
                   >
-                    Ver detalhes
+                    {item.fonteUrl ? "Ver fonte" : "Ver mat\u00e9rias relacionadas"}
                   </button>
-                </div>
+                </article>
               ))}
             </div>
           )}
-        </div>
-      </section>
-      <section
-        style={{
-          maxWidth: "1100px",
-          margin: "30px auto 10px auto",
-          padding: "0 20px",
-          position: "relative",
-          zIndex: 10,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            gap: "20px",
-            flexWrap: "wrap",
-            marginBottom: "20px",
-          }}
-        >
-          <div>
-            <p
-              style={{
-                color: "#FFD700",
-                textTransform: "uppercase",
-                letterSpacing: "1px",
-                fontSize: "0.82rem",
-                fontWeight: "bold",
-                marginBottom: "8px",
-              }}
-            >
-              Resumo editorial automático
-            </p>
+        </section>
 
-            <h2
-              style={{
-                color: "#fff",
-                fontSize: "clamp(1.6rem, 4vw, 2.4rem)",
-                margin: 0,
-              }}
-            >
-              O que mudou esta semana
-            </h2>
+        <section className="section-block page-shell" id="linha-do-tempo" aria-labelledby="linha-titulo">
+          <div className="section-heading">
+            <div>
+              <p className="section-kicker">{"Mem\u00f3ria p\u00fablica"}</p>
+              <h2 id="linha-titulo">Linha do tempo da era SAF</h2>
+              <p className="section-lead">
+                {"Marcos registrados em ordem editorial para preservar a mem\u00f3ria das decis\u00f5es e acontecimentos."}
+              </p>
+            </div>
           </div>
-        </div>
 
-        {mudancasSemana.length === 0 ? (
-          <div
-            style={{
-              background: "rgba(18,18,18,0.95)",
-              border: "1px solid #2f2f2f",
-              borderRadius: "12px",
-              padding: "18px",
-              color: "#aaa",
-            }}
-          >
-            Nenhum destaque semanal disponível no momento.
-          </div>
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-              gap: "16px",
-            }}
-          >
-            {mudancasSemana.map((item, index) => (
-              <div
-                key={index}
-                style={{
-                  background: "rgba(18,18,18,0.95)",
-                  border: "1px solid #2f2f2f",
-                  borderRadius: "12px",
-                  padding: "18px",
-                  boxShadow: "0 6px 18px rgba(0,0,0,0.2)",
-                  display: "flex",
-                  flexDirection: "column",
-                  minHeight: "220px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "10px",
-                    flexWrap: "wrap",
-                    marginBottom: "14px",
-                  }}
-                >
-                  <span
-                    style={{
-                      display: "inline-block",
-                      padding: "6px 10px",
-                      borderRadius: "999px",
-                      fontSize: "0.78rem",
-                      fontWeight: "bold",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.4px",
-                      backgroundColor: "rgba(255,215,0,0.12)",
-                      color: "#FFD700",
-                      border: "1px solid rgba(255,215,0,0.25)",
-                    }}
-                  >
-                    {item.tag || "SAF"}
-                  </span>
-
-                  <span
-                    style={{
-                      color: "#FF8A8A",
-                      fontSize: "0.8rem",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {item.impacto || "Monitoramento"}
-                  </span>
-                </div>
-
-                <h3
-                  style={{
-                    color: "#fff",
-                    fontSize: "1.08rem",
-                    lineHeight: "1.4",
-                    margin: "0 0 12px 0",
-                  }}
-                >
-                  {item.titulo}
-                </h3>
-
-                <p
-                  style={{
-                    color: "#c8c8c8",
-                    lineHeight: "1.6",
-                    fontSize: "0.96rem",
-                    margin: 0,
-                    flex: 1,
-                  }}
-                >
-                  {item.resumo}
-                </p>
-
-                <button
-                  onClick={() => {
-                    if (item.fonteUrl) {
-                      window.open(
-                        item.fonteUrl,
-                        "_blank",
-                        "noopener,noreferrer",
-                      );
-                      return;
-                    }
-
-                    const secao = document.getElementById("inicio-dossie");
-                    if (secao) secao.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  style={{
-                    marginTop: "18px",
-                    backgroundColor: "transparent",
-                    color: "#fff",
-                    border: "1px solid #444",
-                    borderRadius: "8px",
-                    padding: "10px 14px",
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                  }}
-                >
-                  {item.fonteUrl ? "Ver fonte" : "Ver matérias relacionadas"}
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <div className="split-container" style={{ marginTop: "40px" }}>
-        <div className="split-side side-left">
-          <div
-            className="card-estatico"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.9)), url(/rosto-rafael.jpg)",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              borderRadius: "10px",
-              padding: "40px 20px",
-              color: "#fff",
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              textAlign: "center",
-            }}
-          >
-            <h2 style={{ fontSize: "2.5rem", margin: "0 0 10px 0" }}>
-              Rafael Menin
-            </h2>
-            <p
-              style={{
-                color: "#FF4444",
-                fontWeight: "bold",
-                textTransform: "uppercase",
-                fontSize: "1.3rem",
-                margin: 0,
-              }}
-            >
-              Dono
-            </p>
-          </div>
-        </div>
-
-        <div className="split-side side-right">
-          <div
-            className="card-estatico"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.9)), url(/rosto-rubens.jpg)",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              borderRadius: "10px",
-              padding: "40px 20px",
-              color: "#fff",
-              height: "100%",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              textAlign: "center",
-            }}
-          >
-            <h2 style={{ fontSize: "2.5rem", margin: "0 0 10px 0" }}>
-              Rubens Menin
-            </h2>
-            <p
-              style={{
-                color: "#FF4444",
-                fontWeight: "bold",
-                textTransform: "uppercase",
-                fontSize: "1.3rem",
-                margin: 0,
-              }}
-            >
-              Dono
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <section
-        style={{
-          maxWidth: "820px",
-          margin: "40px auto",
-          padding: "0 20px",
-        }}
-      >
-        <h2
-          style={{
-            color: "#fff",
-            borderBottom: "2px solid #333",
-            paddingBottom: "10px",
-            marginBottom: "25px",
-            textAlign: "center",
-            textTransform: "uppercase",
-          }}
-        >
-          Linha do tempo da SAF
-        </h2>
-
-        <div
-          style={{
-            position: "relative",
-            marginLeft: "10px",
-            paddingLeft: "24px",
-            borderLeft: "3px solid #333",
-          }}
-        >
           {linhaDoTempoData.length === 0 ? (
-            <p style={{ color: "#aaa" }}>
-              Nenhum marco da linha do tempo disponível no momento.
-            </p>
+            <p className="empty-state">{"Nenhum marco da linha do tempo dispon\u00edvel no momento."}</p>
           ) : (
-            linhaDoTempoData.map((item, index) => (
-              <div
-                key={index}
-                style={{
-                  position: "relative",
-                  marginBottom: "18px",
-                  backgroundColor: "rgba(17,17,17,0.9)",
-                  border: "1px solid #2a2a2a",
-                  borderRadius: "10px",
-                  padding: "16px 18px",
-                  boxShadow: "0 4px 14px rgba(0,0,0,0.25)",
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    left: "-33px",
-                    top: "18px",
-                    width: "14px",
-                    height: "14px",
-                    borderRadius: "50%",
-                    backgroundColor: "#FFD700",
-                    border: "3px solid #111",
-                    boxShadow: "0 0 0 2px #333",
-                  }}
-                />
-
-                <div
-                  style={{
-                    color: "#FFD700",
-                    fontSize: "0.82rem",
-                    fontWeight: "bold",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.8px",
-                    marginBottom: "6px",
-                  }}
-                >
-                  {item.data}
-                </div>
-
-                <h3
-                  style={{
-                    color: "#fff",
-                    margin: "0 0 8px 0",
-                    fontSize: "1.1rem",
-                  }}
-                >
-                  {item.titulo}
-                </h3>
-
-                <p
-                  style={{
-                    color: "#cfcfcf",
-                    margin: 0,
-                    lineHeight: "1.5",
-                    fontSize: "0.95rem",
-                  }}
-                >
-                  {item.desc}
-                </p>
-              </div>
-            ))
+            <div className="timeline-track" aria-label="Linha do tempo horizontal">
+              {linhaDoTempoData.map((item, index) => (
+                <article className="timeline-item" key={`${item.data}-${item.titulo}-${index}`}>
+                  <time>{item.data}</time>
+                  <h3>{item.titulo}</h3>
+                  <p>{item.desc}</p>
+                </article>
+              ))}
+            </div>
           )}
-        </div>
-      </section>
+        </section>
 
-      <section className="materias-section" id="inicio-dossie">
-        <h2 className="titulo-secao">O Dossiê Completo</h2>
+        <section className="section-block page-shell dossier-section" id="inicio-dossie" aria-labelledby="dossie-titulo">
+          <div className="section-heading">
+            <div>
+              <p className="section-kicker">{"Arquivo de mat\u00e9rias"}</p>
+              <h2 id="dossie-titulo">{"Dossi\u00ea Pulguinha"}</h2>
+              <p className="section-lead">
+                {"Not\u00edcias e registros reunidos automaticamente para consulta e"}
+                acompanhamento.
+              </p>
+            </div>
+          </div>
 
-        <div
-          style={{
-            maxWidth: "800px",
-            margin: "0 auto 30px auto",
-            textAlign: "center",
-          }}
-        >
+          <label className="search-label" htmlFor="busca-dossie">
+            {"Buscar no dossi\u00ea"}
+          </label>
           <input
+            id="busca-dossie"
+            className="search-input"
             type="text"
-            placeholder="Pesquisar no dossiê (ex: dívida, arena, jogador...)"
+            placeholder={"Pesquisar no dossi\u00ea (ex: d\u00edvida, arena, jogador...)"}
             value={termoBusca}
             onChange={(e) => setTermoBusca(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "15px",
-              fontSize: "1rem",
-              borderRadius: "8px",
-              border: "1px solid #444",
-              backgroundColor: "#111",
-              color: "#fff",
-              outline: "none",
-            }}
           />
-        </div>
 
-        {carregando && (
-          <p style={{ textAlign: "center", color: "#ccc" }}>
-            Carregando dossiê...
-          </p>
-        )}
+          {carregando && <p className="loading-state">{"Carregando dossi\u00ea..."}</p>}
+          {erroApi && <p className="error-state">{erroApi}</p>}
 
-        {erroApi && (
-          <p style={{ textAlign: "center", color: "#FF8888" }}>{erroApi}</p>
-        )}
-
-        {!carregando && !erroApi && materiasPaginadas.length > 0
-          ? materiasPaginadas.map((m) => (
-              <div
-                key={m._id || m.fonteUrl || m.titulo}
-                className="materia-item"
-              >
-                <h2>{m.titulo}</h2>
-                <p
-                  style={{
-                    fontSize: "0.85rem",
-                    color: "#888",
-                    marginBottom: "15px",
-                    fontStyle: "italic",
-                  }}
-                >
-                  Capturado em:{" "}
-                  {m.dataCriacao
-                    ? new Date(m.dataCriacao).toLocaleString("pt-BR")
-                    : "Data indisponível"}
-                </p>
-                <p>{m.conteudo}</p>
-                <div
-                  style={{
-                    marginTop: "15px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "12px",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <span style={{ color: "#ccc", fontSize: "0.8rem" }}>
-                    {m.fonteNome
-                      ? `Fonte: ${m.fonteNome}`
-                      : "Fonte não informada"}
-                  </span>
+          {!carregando && !erroApi && materiasPaginadas.length > 0 ? (
+            <div className="archive-list">
+              {materiasPaginadas.map((m) => (
+                <article className="archive-entry" key={m._id || m.fonteUrl || m.titulo}>
+                  <div className="archive-meta">
+                    <span>{m.fonteNome ? `Fonte: ${m.fonteNome}` : "Fonte n\u00e3o informada"}</span>
+                    <span>
+                      {m.dataCriacao
+                        ? new Date(m.dataCriacao).toLocaleString("pt-BR")
+                        : "Data indispon\u00edvel"}
+                    </span>
+                  </div>
+                  <h3>{m.titulo}</h3>
+                  <p>{m.conteudo}</p>
                   {m.fonteUrl && (
                     <a
                       href={m.fonteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn-fonte"
+                      className="source-link"
                     >
-                      Ver matéria
+                      Abrir fonte
                     </a>
                   )}
-                </div>
-              </div>
-            ))
-          : null}
+                </article>
+              ))}
+            </div>
+          ) : null}
 
-        {!carregando && !erroApi && materiasPaginadas.length === 0 && (
-          <p style={{ textAlign: "center", color: "#888" }}>
-            Nenhuma matéria encontrada no radar.
-          </p>
-        )}
+          {!carregando && !erroApi && materiasPaginadas.length === 0 && (
+            <p className="empty-state">{"Nenhuma mat\u00e9ria encontrada no radar."}</p>
+          )}
 
-        {!carregando && !erroApi && totalPaginas > 1 && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: "15px",
-              marginTop: "30px",
-            }}
-          >
+          {!carregando && !erroApi && totalPaginas > 1 && (
+            <nav className="pagination" aria-label={"Pagina\u00e7\u00e3o do dossi\u00ea"}>
+              <button
+                type="button"
+                onClick={() => mudarPaginaESubir(paginaAtual - 1)}
+                disabled={paginaAtual === 1}
+              >
+                Anterior
+              </button>
+              <span>{"P\u00e1gina"} {paginaAtual} de {totalPaginas}</span>
+              <button
+                type="button"
+                onClick={() => mudarPaginaESubir(paginaAtual + 1)}
+                disabled={paginaAtual === totalPaginas}
+              >
+                {"Pr\u00f3xima"}
+              </button>
+            </nav>
+          )}
+        </section>
+
+        <section className="section-block page-shell contribute-section" id="form-massa" aria-labelledby="contribua-titulo">
+          <div className="section-heading">
+            <div>
+              <p className="section-kicker">{"Envio de informa\u00e7\u00f5es"}</p>
+              <h2 id="contribua-titulo">Contribua com o arquivo</h2>
+              <p className="section-lead">
+                {"Envie documentos, links, informa\u00e7\u00f5es ou corre\u00e7\u00f5es que possam fortalecer o acompanhamento p\u00fablico."}
+              </p>
+            </div>
             <button
-              onClick={() => mudarPaginaESubir(paginaAtual - 1)}
-              disabled={paginaAtual === 1}
-              style={{
-                padding: "10px 15px",
-                backgroundColor: paginaAtual === 1 ? "#333" : "#FFD700",
-                color: paginaAtual === 1 ? "#777" : "#000",
-                border: "none",
-                borderRadius: "5px",
-                fontWeight: "bold",
-                cursor: paginaAtual === 1 ? "not-allowed" : "pointer",
-                transition: "all 0.3s",
-              }}
+              type="button"
+              className="btn btn--secondary"
+              onClick={() => setModalCampanhaAberto(true)}
             >
-              Anterior
-            </button>
-
-            <span style={{ color: "#fff", fontWeight: "bold" }}>
-              Página {paginaAtual} de {totalPaginas}
-            </span>
-
-            <button
-              onClick={() => mudarPaginaESubir(paginaAtual + 1)}
-              disabled={paginaAtual === totalPaginas}
-              style={{
-                padding: "10px 15px",
-                backgroundColor:
-                  paginaAtual === totalPaginas ? "#333" : "#FFD700",
-                color: paginaAtual === totalPaginas ? "#777" : "#000",
-                border: "none",
-                borderRadius: "5px",
-                fontWeight: "bold",
-                cursor:
-                  paginaAtual === totalPaginas ? "not-allowed" : "pointer",
-                transition: "all 0.3s",
-              }}
-            >
-              Próxima
+              Central de protestos
             </button>
           </div>
-        )}
-      </section>
 
-      <section
-        id="form-massa"
-        style={{
-          maxWidth: "800px",
-          margin: "50px auto 0 auto",
-          padding: "0 20px",
-        }}
-      >
-        <div
-          style={{
-            backgroundColor: "#111",
-            border: "1px solid #333",
-            borderRadius: "12px",
-            padding: "24px",
-          }}
-        >
-          <h2 style={{ color: "#fff", marginTop: 0 }}>
-            Envie uma denúncia, sugestão ou correção
-          </h2>
-
-          <p style={{ color: "#bbb", lineHeight: "1.6" }}>
-            Encontrou uma informação importante, uma notícia que passou batida
-            ou quer corrigir algo do dossiê? Mande para a gente.
-          </p>
-
-          <form
-            onSubmit={handleEnviarFormulario}
-            style={{ display: "grid", gap: "14px", marginTop: "20px" }}
-          >
+          <form className="contribute-form" onSubmit={handleEnviarFormulario}>
+            <label htmlFor="nome">Nome</label>
             <input
+              id="nome"
               type="text"
               name="nome"
               placeholder="Seu nome"
               value={formulario.nome}
               onChange={handleFormularioChange}
               required
-              style={{
-                width: "100%",
-                padding: "14px",
-                fontSize: "1rem",
-                borderRadius: "8px",
-                border: "1px solid #444",
-                backgroundColor: "#181818",
-                color: "#fff",
-              }}
             />
 
+            <label htmlFor="email">E-mail</label>
             <input
+              id="email"
               type="email"
               name="email"
               placeholder="Seu e-mail"
               value={formulario.email}
               onChange={handleFormularioChange}
               required
-              style={{
-                width: "100%",
-                padding: "14px",
-                fontSize: "1rem",
-                borderRadius: "8px",
-                border: "1px solid #444",
-                backgroundColor: "#181818",
-                color: "#fff",
-              }}
             />
 
+            <label htmlFor="mensagem">Mensagem</label>
             <textarea
+              id="mensagem"
               name="mensagem"
               placeholder="Digite aqui sua mensagem"
               value={formulario.mensagem}
               onChange={handleFormularioChange}
               required
               rows={6}
-              style={{
-                width: "100%",
-                padding: "14px",
-                fontSize: "1rem",
-                borderRadius: "8px",
-                border: "1px solid #444",
-                backgroundColor: "#181818",
-                color: "#fff",
-                resize: "vertical",
-              }}
             />
 
-            <button
-              type="submit"
-              disabled={enviandoFormulario}
-              style={{
-                backgroundColor: enviandoFormulario ? "#666" : "#FFD700",
-                color: "#111",
-                border: "none",
-                borderRadius: "8px",
-                padding: "14px 18px",
-                fontWeight: "bold",
-                cursor: enviandoFormulario ? "not-allowed" : "pointer",
-              }}
-            >
+            <button type="submit" className="btn btn--primary" disabled={enviandoFormulario}>
               {enviandoFormulario ? "Enviando..." : "Enviar mensagem"}
             </button>
           </form>
 
-          {mensagemFormulario && (
-            <p style={{ color: "#7CFC98", marginTop: "14px" }}>
-              {mensagemFormulario}
-            </p>
-          )}
-          {erroFormulario && (
-            <p style={{ color: "#FF8888", marginTop: "14px" }}>
-              {erroFormulario}
-            </p>
-          )}
-        </div>
-      </section>
+          {mensagemFormulario && <p className="success-state">{mensagemFormulario}</p>}
+          {erroFormulario && <p className="error-state">{erroFormulario}</p>}
+        </section>
+      </main>
 
-      <footer
-        style={{
-          marginTop: "50px",
-          padding: "20px",
-          backgroundColor: "#000",
-          borderTop: "1px solid #333",
-          textAlign: "center",
-          color: "#888",
-          fontSize: "0.8rem",
-        }}
-      >
-        <p>
-          <strong>Galo do Povo</strong> © {new Date().getFullYear()} - O dossiê
-          da Massa.
-        </p>
-        <p style={{ maxWidth: "800px", margin: "0 auto", lineHeight: "1.4" }}>
-          Este site é uma iniciativa independente de torcedores. Não possui
-          vínculo oficial com o Clube Atlético Mineiro, associação, SAF ou
-          investidores. O conteúdo reúne notícias públicas, crítica, opinião e
-          monitoramento da gestão.
-        </p>
+      <footer className="site-footer">
+        <div className="page-shell">
+          <strong>GALO DO POVO</strong>
+          <p>
+            {"O Galo do Povo \u00e9 uma iniciativa independente de registro e fiscaliza\u00e7\u00e3o. N\u00e3o possui v\u00ednculo, autoriza\u00e7\u00e3o ou representa\u00e7\u00e3o oficial do Clube Atl\u00e9tico Mineiro, de sua SAF ou de seus parceiros."}
+          </p>
+        </div>
       </footer>
     </div>
   );

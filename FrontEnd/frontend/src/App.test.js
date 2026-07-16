@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import App from "./App";
 
 const originalFetch = global.fetch;
@@ -36,12 +36,53 @@ const materiasData = {
 };
 
 const homeData = {
-  contador: { dias: 900, diasTecnico: 30, mentiras: 3 },
-  resumoSemana: [],
-  promessasDestaque: [],
-  promessas: [],
-  tecnicos: [],
-  linhaDoTempo: [],
+  contador: { dias: 900, diasTecnico: 30, mentiras: 1 },
+  resumoSemana: [
+    {
+      tag: "Gestao",
+      impacto: "Monitoramento",
+      titulo: "Registro semanal de teste",
+      resumo: "Resumo preservado da API.",
+      fonteUrl: "https://example.com/fonte",
+    },
+  ],
+  promessasDestaque: [
+    {
+      id: "promessa-1",
+      titulo: "Promessa de teste",
+      status: "Sob verificação",
+      resumo: "Resumo da promessa em destaque.",
+    },
+  ],
+  promessas: [
+    {
+      id: "promessa-1",
+      titulo: "Promessa de teste",
+      resumo: "Resumo da promessa completa.",
+      situacao: "Em acompanhamento.",
+    },
+  ],
+  tecnicos: [
+    {
+      nome: "Tecnico anterior",
+      periodo: "2025",
+      dias: "40 dias",
+      motivo: "Demitido",
+    },
+    {
+      nome: "Tecnico atual",
+      periodo: "2026 - atual",
+      dias: "30 dias",
+      motivo: "Em cargo",
+    },
+  ],
+  linhaDoTempo: [
+    {
+      data: "2026",
+      titulo: "Marco de teste",
+      desc: "Descricao do marco de teste.",
+    },
+  ],
 };
 
 function configurarFetch({
@@ -83,11 +124,38 @@ test("renderiza a pagina publica do Galo do Povo", async () => {
     }),
   ).toBeInTheDocument();
 
-  await waitFor(() => {
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/api/materias"),
-    );
+  expect(
+    await screen.findByText("Materia de teste sobre a SAF"),
+  ).toBeInTheDocument();
+});
+
+test("abre modais sem inventar status de promessa e mostra campanha original", async () => {
+  window.scrollTo = jest.fn();
+  configurarFetch();
+
+  render(<App />);
+
+  expect(await screen.findByText("Promessa de teste")).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "Ver lista completa" }));
+
+  const dialogPromessas = screen.getByRole("dialog", {
+    name: "Promessas consolidadas",
   });
+  expect(within(dialogPromessas).getByText("Promessa de teste")).toBeInTheDocument();
+  expect(within(dialogPromessas).queryByText("Sob verificação")).not.toBeInTheDocument();
+
+  fireEvent.click(
+    within(dialogPromessas).getByRole("button", {
+      name: "Fechar lista de promessas",
+    }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Central de protestos" }));
+
+  const dialogCampanhas = screen.getByRole("dialog", {
+    name: "Campanhas e mobilizações",
+  });
+  expect(within(dialogCampanhas).getByRole("heading", { name: "Adesivaço BH" })).toBeInTheDocument();
 });
 
 test("exibe materias quando materias carregam e home falha", async () => {
@@ -100,9 +168,7 @@ test("exibe materias quando materias carregam e home falha", async () => {
   expect(
     await screen.findByText("Materia de teste sobre a SAF"),
   ).toBeInTheDocument();
-  expect(
-    screen.queryByText(/carregar o dossi/i),
-  ).not.toBeInTheDocument();
+  expect(screen.queryByText(/carregar o dossi/i)).not.toBeInTheDocument();
 });
 
 test("continua renderizando quando home carrega e materias falham", async () => {
@@ -118,9 +184,7 @@ test("continua renderizando quando home carrega e materias falham", async () => 
     }),
   ).toBeInTheDocument();
   expect(await screen.findByText("900")).toBeInTheDocument();
-  expect(
-    screen.queryByText(/carregar o dossi/i),
-  ).not.toBeInTheDocument();
+  expect(screen.queryByText(/carregar o dossi/i)).not.toBeInTheDocument();
 });
 
 test("mostra erro geral quando materias e home falham", async () => {
@@ -135,4 +199,77 @@ test("mostra erro geral quando materias e home falham", async () => {
       "Não foi possível carregar o dossiê agora. Tente novamente em instantes.",
     ),
   ).toBeInTheDocument();
+});
+
+test("exibe identidade editorial e aviso de independencia", async () => {
+  window.scrollTo = jest.fn();
+  configurarFetch();
+
+  render(<App />);
+
+  expect(screen.getAllByText("GALO DO POVO").length).toBeGreaterThan(0);
+  expect(screen.getByText("GdP")).toBeInTheDocument();
+  expect(
+    screen.getByText(/iniciativa independente, sem vínculo ou representação oficial/i),
+  ).toBeInTheDocument();
+  expect(await screen.findByText("Promessa de teste")).toBeInTheDocument();
+});
+
+test("exibe a secao financeira com metodologia", async () => {
+  window.scrollTo = jest.fn();
+  configurarFetch();
+
+  render(<App />);
+
+  expect(
+    screen.getByRole("heading", { name: "O custo da dívida" }),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Entenda o cálculo")).toBeInTheDocument();
+  expect(await screen.findByText("Promessa de teste")).toBeInTheDocument();
+});
+
+test("exibe dossie, indicadores e linha do tempo editorial", async () => {
+  window.scrollTo = jest.fn();
+  configurarFetch();
+
+  render(<App />);
+
+  expect(
+    screen.getByRole("heading", { name: "Dossiê Pulguinha" }),
+  ).toBeInTheDocument();
+
+  const tempoTecnicoAtual = screen.getByText("Tempo do técnico atual");
+  expect(tempoTecnicoAtual).toBeInTheDocument();
+  expect(tempoTecnicoAtual.closest("button")).toBeNull();
+  expect(tempoTecnicoAtual.closest('[role="button"]')).toBeNull();
+
+  expect(
+    screen.getByRole("button", { name: /técnicos trocados/i }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("heading", { name: "Linha do tempo da era SAF" }),
+  ).toBeInTheDocument();
+  expect(await screen.findByText("Marco de teste")).toBeInTheDocument();
+});
+
+test("nao renderiza padroes de mojibake na pagina publica", async () => {
+  window.scrollTo = jest.fn();
+  configurarFetch();
+
+  render(<App />);
+
+  expect(await screen.findByText("Materia de teste sobre a SAF")).toBeInTheDocument();
+  expect(screen.getAllByText("Enviar informação").length).toBeGreaterThan(0);
+  expect(
+    screen.getByText(
+      "Um arquivo público de promessas, decisões, notícias e acontecimentos que ajudam a acompanhar a gestão da SAF.",
+    ),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "O custo da dívida" })).toBeInTheDocument();
+  expect(screen.getByText("Entenda o cálculo")).toBeInTheDocument();
+  expect(screen.getByRole("heading", { name: "Dossiê Pulguinha" })).toBeInTheDocument();
+  expect(screen.getByText("Memória pública")).toBeInTheDocument();
+  expect(document.body.textContent).not.toMatch(
+    /\u00c3\u0192|\u00c3\u201a|\u00c6\u2019|\u00c2\u00bf|\u00ef\u00bf\u00bd|\ufffd/,
+  );
 });
