@@ -7,8 +7,96 @@ const nodemailer = require("nodemailer");
 const Parser = require("rss-parser");
 const cron = require("node-cron");
 const mongoose = require("mongoose");
+const { normalizarUrl } = require("./lib/urlUtils");
 
 const app = express();
+
+const RSS_TIMEOUT_PADRAO_MS = 15000;
+const RSS_TIMEOUT_MIN_MS = 3000;
+const RSS_TIMEOUT_MAX_MS = 60000;
+
+function limitarNumero(valor, minimo, maximo) {
+  return Math.min(Math.max(valor, minimo), maximo);
+}
+
+function validarConfiguracoes() {
+  const erros = [];
+  const avisos = [];
+  const ambienteProducao = process.env.NODE_ENV === "production";
+
+  if (!String(process.env.MONGODB_URI || "").trim()) {
+    erros.push("MONGODB_URI");
+  }
+
+  if (ambienteProducao && !String(process.env.ADMIN_TOKEN || "").trim()) {
+    erros.push("ADMIN_TOKEN");
+  }
+
+  if (ambienteProducao && !String(process.env.ALLOWED_ORIGINS || "").trim()) {
+    avisos.push("ALLOWED_ORIGINS ausente em producao");
+  }
+
+  const emailUserConfigurado = Boolean(
+    String(process.env.EMAIL_USER || "").trim(),
+  );
+  const emailPasswordConfigurado = Boolean(
+    String(process.env.EMAIL_PASSWORD || "").trim(),
+  );
+
+  if (!emailUserConfigurado && !emailPasswordConfigurado) {
+    avisos.push("EMAIL_USER e EMAIL_PASSWORD ausentes; envio indisponivel");
+  } else if (emailUserConfigurado !== emailPasswordConfigurado) {
+    avisos.push("EMAIL_USER/EMAIL_PASSWORD com configuracao incompleta");
+  }
+
+  let rssTimeoutMs = RSS_TIMEOUT_PADRAO_MS;
+  const rssTimeoutRaw = String(process.env.RSS_TIMEOUT_MS || "").trim();
+
+  if (rssTimeoutRaw) {
+    const rssTimeoutInformado = Number(rssTimeoutRaw);
+
+    if (
+      Number.isInteger(rssTimeoutInformado) &&
+      Number.isFinite(rssTimeoutInformado)
+    ) {
+      rssTimeoutMs = limitarNumero(
+        rssTimeoutInformado,
+        RSS_TIMEOUT_MIN_MS,
+        RSS_TIMEOUT_MAX_MS,
+      );
+    } else {
+      avisos.push("RSS_TIMEOUT_MS invalido; usando valor padrao");
+    }
+  }
+
+  for (const aviso of avisos) {
+    console.warn(`[config] Aviso: ${aviso}.`);
+  }
+
+  if (erros.length > 0) {
+    for (const nomeVariavel of erros) {
+      console.error(`[config] Erro critico: ${nomeVariavel} ausente.`);
+    }
+
+    throw new Error("Configuracao critica ausente");
+  }
+
+  return {
+    rssTimeoutMs,
+    emailHabilitado: emailUserConfigurado && emailPasswordConfigurado,
+  };
+}
+
+function carregarConfiguracoesOuEncerrar() {
+  try {
+    return validarConfiguracoes();
+  } catch (err) {
+    process.exitCode = 1;
+    process.exit(1);
+  }
+}
+
+const configuracoes = carregarConfiguracoesOuEncerrar();
 
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
@@ -54,16 +142,6 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(async () => {
-    console.log("📦 Conectado ao MongoDB! O dossiê agora é eterno.");
-    await garantirSeedPromessas();
-    await garantirSeedTecnicos();
-    await garantirSeedLinhaDoTempo();
-  })
-  .catch((err) => console.error("❌ Erro ao conectar no banco:", err));
-
 const materiaSchema = new mongoose.Schema({
   titulo: { type: String, required: true, trim: true },
   conteudo: { type: String, default: "" },
@@ -99,7 +177,14 @@ votoTermometroSchema.index(
 const VotoTermometro = mongoose.model("VotoTermometro", votoTermometroSchema);
 const parser = new Parser({
   headers: { "User-Agent": "Mozilla/5.0" },
+  timeout: configuracoes.rssTimeoutMs,
 });
+
+let coletaEmAndamento = false;
+let inicioColetaAtual = null;
+let ultimaColetaInicio = null;
+let ultimaColetaFim = null;
+let ultimoResumoColeta = null;
 
 const tecnicoSchema = new mongoose.Schema(
   {
@@ -538,23 +623,77 @@ function serializarTecnico(t) {
   };
 }
 
-async function buscarNoticiasAutomaticas() {
-  console.log("🤖 Pulguinha em campo buscando notícias...");
+function criarResumoColeta(origem) {
+  return {
+    origem,
+    fontesProcessadas: 0,
+    fontesComErro: 0,
+    itensLidos: 0,
+    ignoradosSemLink: 0,
+    ignoradosPorScore: 0,
+    duplicados: 0,
+    salvos: 0,
+    errosAoSalvar: 0,
+    duracaoMs: 0,
+  };
+}
+
+function mensagemErroSanitizada(err) {
+  const mensagem = err && err.message ? err.message : "Erro externo sem detalhes";
+
+  return mensagem.replace(
+    /([a-z][a-z0-9+.-]*:\/\/)([^/@\s]+)@/gi,
+    "$1[credenciais]@",
+  );
+}
+
+async function carregarUrlsConhecidas() {
+  const urlsConhecidas = new Set();
+  const materiasExistentes = await Materia.find({}, { fonteUrl: 1, link: 1 })
+    .lean();
+
+  for (const materia of materiasExistentes) {
+    const fonteUrlNormalizada = normalizarUrl(materia.fonteUrl);
+    const linkNormalizado = normalizarUrl(materia.link);
+
+    if (fonteUrlNormalizada) urlsConhecidas.add(fonteUrlNormalizada);
+    if (linkNormalizado) urlsConhecidas.add(linkNormalizado);
+  }
+
+  return urlsConhecidas;
+}
+
+async function buscarNoticiasAutomaticas(origem = "manual") {
+  const resumo = criarResumoColeta(origem);
+  const inicio = Date.now();
+  const urlsConhecidas = await carregarUrlsConhecidas();
+
+  console.log(`[pulguinha] Coleta iniciada. origem=${origem}`);
 
   for (const fonte of fontesRSS) {
     try {
       const feed = await parser.parseURL(fonte.url);
+      resumo.fontesProcessadas += 1;
 
       for (const item of (feed.items || []).slice(0, 10)) {
-        const textoParaVerificar = `${item.title || ""} ${item.contentSnippet || ""}`;
-        const score = pontuarMateria(textoParaVerificar);
+        resumo.itensLidos += 1;
 
-        if (score < 3 || !item.link) {
+        const linkNormalizado = normalizarUrl(item.link);
+        if (!linkNormalizado) {
+          resumo.ignoradosSemLink += 1;
           continue;
         }
 
-        const existe = await Materia.findOne({ fonteUrl: item.link });
-        if (existe) {
+        const textoParaVerificar = `${item.title || ""} ${item.contentSnippet || ""}`;
+        const score = pontuarMateria(textoParaVerificar);
+
+        if (score < 3) {
+          resumo.ignoradosPorScore += 1;
+          continue;
+        }
+
+        if (urlsConhecidas.has(linkNormalizado)) {
+          resumo.duplicados += 1;
           continue;
         }
 
@@ -564,37 +703,93 @@ async function buscarNoticiasAutomaticas() {
             conteudo: item.contentSnippet
               ? `${item.contentSnippet.substring(0, 220)}...`
               : "Clique no link para ler.",
-            link: item.link,
+            link: linkNormalizado,
             fonteNome: fonte.nome,
-            fonteUrl: item.link,
+            fonteUrl: linkNormalizado,
           });
 
-          console.log(`✅ Nova matéria salva [${fonte.nome}]: ${item.title}`);
+          urlsConhecidas.add(linkNormalizado);
+          resumo.salvos += 1;
+          console.log(`[pulguinha] Materia salva. fonte=${fonte.nome}`);
         } catch (err) {
           if (err && err.code === 11000) {
-            console.log(`ℹ️ Matéria duplicada ignorada: ${item.link}`);
+            urlsConhecidas.add(linkNormalizado);
+            resumo.duplicados += 1;
           } else {
+            resumo.errosAoSalvar += 1;
             console.error(
-              `❌ Erro ao salvar matéria da fonte ${fonte.nome}:`,
-              err.message,
+              `[pulguinha] Erro ao salvar materia. fonte=${fonte.nome}:`,
+              mensagemErroSanitizada(err),
             );
           }
         }
       }
     } catch (err) {
-      console.error(`❌ Erro na fonte ${fonte.nome}:`, err.message);
+      resumo.fontesComErro += 1;
+      console.error(
+        `[pulguinha] Erro na fonte. fonte=${fonte.nome}:`,
+        mensagemErroSanitizada(err),
+      );
     }
   }
+
+  resumo.duracaoMs = Date.now() - inicio;
+  console.log("[pulguinha] Resumo da coleta:", resumo);
+  return resumo;
 }
 
-cron.schedule("0 * * * *", buscarNoticiasAutomaticas);
-buscarNoticiasAutomaticas();
+async function executarColetaProtegida(origem) {
+  if (coletaEmAndamento) {
+    console.log(`[pulguinha] Coleta ignorada por sobreposicao. origem=${origem}`);
+    return null;
+  }
+
+  coletaEmAndamento = true;
+  inicioColetaAtual = new Date();
+  ultimaColetaInicio = inicioColetaAtual;
+
+  try {
+    const resumo = await buscarNoticiasAutomaticas(origem);
+    ultimoResumoColeta = resumo;
+    return resumo;
+  } catch (err) {
+    ultimoResumoColeta = {
+      origem,
+      erro: mensagemErroSanitizada(err),
+    };
+    console.error(
+      "[pulguinha] Erro inesperado na coleta:",
+      mensagemErroSanitizada(err),
+    );
+    return null;
+  } finally {
+    ultimaColetaFim = new Date();
+    coletaEmAndamento = false;
+    inicioColetaAtual = null;
+  }
+}
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     ok: true,
     service: "galo-do-povo-api",
     timestamp: new Date().toISOString(),
+    mongo: {
+      readyState: mongoose.connection.readyState,
+      estado:
+        mongoose.connection.readyState === 1 ? "conectado" : "nao_conectado",
+    },
+    pulguinha: {
+      coletaEmAndamento,
+      inicioColetaAtual: inicioColetaAtual
+        ? inicioColetaAtual.toISOString()
+        : null,
+      ultimaColetaInicio: ultimaColetaInicio
+        ? ultimaColetaInicio.toISOString()
+        : null,
+      ultimaColetaFim: ultimaColetaFim ? ultimaColetaFim.toISOString() : null,
+      ultimoResumo: ultimoResumoColeta,
+    },
   });
 });
 
@@ -1500,13 +1695,15 @@ app.post("/api/termometro/votar", async (req, res) => {
   }
 });
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
+const transporter = configuracoes.emailHabilitado
+  ? nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+    })
+  : null;
 
 const sugestoesLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -1556,6 +1753,13 @@ app.post("/api/sugestoes", sugestoesLimiter, async (req, res) => {
   };
 
   try {
+    if (!transporter) {
+      return res.status(503).json({
+        success: false,
+        message: "Envio de mensagem indisponível.",
+      });
+    }
+
     await transporter.sendMail(mailOptions);
     res.json({ success: true, message: "Mensagem enviada com sucesso." });
   } catch (err) {
@@ -1568,4 +1772,40 @@ app.post("/api/sugestoes", sugestoesLimiter, async (req, res) => {
 });
 
 const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => console.log(`Backend ON na porta ${PORT}`));
+
+async function iniciarServidor() {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log("[startup] MongoDB conectado.");
+
+    await garantirSeedPromessas();
+    await garantirSeedTecnicos();
+    await garantirSeedLinhaDoTempo();
+
+    app.listen(PORT, () => {
+      console.log(`Backend ON na porta ${PORT}`);
+    });
+
+    cron.schedule("0 * * * *", () => {
+      executarColetaProtegida("cron").catch((err) => {
+        console.error(
+          "[pulguinha] Falha inesperada no cron:",
+          mensagemErroSanitizada(err),
+        );
+      });
+    });
+
+    executarColetaProtegida("startup").catch((err) => {
+      console.error(
+        "[pulguinha] Falha inesperada na coleta inicial:",
+        mensagemErroSanitizada(err),
+      );
+    });
+  } catch (err) {
+    console.error("[startup] Erro ao iniciar backend. Verifique MongoDB.");
+    process.exitCode = 1;
+    process.exit(1);
+  }
+}
+
+iniciarServidor();
