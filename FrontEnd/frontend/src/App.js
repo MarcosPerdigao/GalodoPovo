@@ -1001,7 +1001,7 @@ export default function App() {
                 <h3>#SAFNota0!</h3>
                 <p>
                   Apoie a campanha do <strong>Frossard</strong> e mostre a
-                  indignacao da arquibancada nas redes sociais.
+                  {"indigna\u00e7\u00e3o"} da arquibancada nas redes sociais.
                 </p>
                 <div className="campaign-links">
                   <a
@@ -1024,8 +1024,8 @@ export default function App() {
               <article className="campaign-item">
                 <h3>{"Adesiva\u00e7o BH"}</h3>
                 <p>
-                  {"A\u00e7\u00e3o da "}<strong>Culture_1908</strong>. Ajude a capitalizar e
-                  espalhar os stickers do protesto em Belo Horizonte.
+                  {"A\u00e7\u00e3o da "}<strong>Culture_1908</strong>.
+                  {" Ajude a capitalizar e lotar Belo Horizonte com os stickers do protesto."}
                 </p>
                 <div className="campaign-links">
                   <a
@@ -1074,9 +1074,11 @@ export default function App() {
                   <article className="document-row" key={p._id || p.id || i}>
                     <div className="record-code">REG-{String(i + 1).padStart(2, "0")}</div>
                     <div>
-                      <span className={getStatusClassName(p.status)}>
-                        {p.status || "Sob verifica\u00e7\u00e3o"}
-                      </span>
+                      {p.status && (
+                        <span className={getStatusClassName(p.status)}>
+                          {p.status}
+                        </span>
+                      )}
                       <h3>{p.titulo}</h3>
                       {p.resumo && <p>{p.resumo}</p>}
                       {p.situacao && (
@@ -1114,7 +1116,7 @@ export default function App() {
               x
             </button>
 
-            <p className="section-kicker">Rotatividade tecnica</p>
+            <p className="section-kicker">{"Rotatividade t\u00e9cnica"}</p>
             <h2 id="tecnicos-modal-titulo">{"T\u00e9cnicos da era SAF"}</h2>
 
             {tecnicosOrdenados.length === 0 ? (
@@ -1160,7 +1162,7 @@ export default function App() {
 
       <header className={cabecalhoCompacto ? "site-header is-compact" : "site-header"}>
         <div className="site-header__inner">
-          <a className="brand" href="#topo" aria-label="GALO DO POVO - inicio">
+          <a className="brand" href="#topo" aria-label={"GALO DO POVO - in\u00edcio"}>
             <span className="brand__mark">GdP</span>
             <span className="brand__text">
               <strong>GALO DO POVO</strong>
@@ -1278,7 +1280,7 @@ export default function App() {
               <h2 id="promessas-titulo">Promessas em destaque</h2>
               <p className="section-lead">
                 {"Registros acompanhados com status, resumo e term\u00f4metro de"}
-                prioridade publica.
+                {"prioridade p\u00fablica."}
               </p>
             </div>
             <button
@@ -1447,7 +1449,7 @@ export default function App() {
               <p className="section-kicker">{"Arquivo de mat\u00e9rias"}</p>
               <h2 id="dossie-titulo">{"Dossi\u00ea Pulguinha"}</h2>
               <p className="section-lead">
-                Noticias e registros reunidos automaticamente para consulta e
+                {"Not\u00edcias e registros reunidos automaticamente para consulta e"}
                 acompanhamento.
               </p>
             </div>
@@ -1473,7 +1475,7 @@ export default function App() {
               {materiasPaginadas.map((m) => (
                 <article className="archive-entry" key={m._id || m.fonteUrl || m.titulo}>
                   <div className="archive-meta">
-                    <span>{m.fonteNome ? `Fonte: ${m.fonteNome}` : "Fonte nao informada"}</span>
+                    <span>{m.fonteNome ? `Fonte: ${m.fonteNome}` : "Fonte n\u00e3o informada"}</span>
                     <span>
                       {m.dataCriacao
                         ? new Date(m.dataCriacao).toLocaleString("pt-BR")

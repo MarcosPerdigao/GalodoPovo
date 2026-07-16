@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import App from "./App";
 
 const originalFetch = global.fetch;
@@ -58,7 +58,6 @@ const homeData = {
     {
       id: "promessa-1",
       titulo: "Promessa de teste",
-      status: "Sob verificação",
       resumo: "Resumo da promessa completa.",
       situacao: "Em acompanhamento.",
     },
@@ -128,6 +127,35 @@ test("renderiza a pagina publica do Galo do Povo", async () => {
   expect(
     await screen.findByText("Materia de teste sobre a SAF"),
   ).toBeInTheDocument();
+});
+
+test("abre modais sem inventar status de promessa e mostra campanha original", async () => {
+  window.scrollTo = jest.fn();
+  configurarFetch();
+
+  render(<App />);
+
+  expect(await screen.findByText("Promessa de teste")).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "Ver lista completa" }));
+
+  const dialogPromessas = screen.getByRole("dialog", {
+    name: "Promessas consolidadas",
+  });
+  expect(within(dialogPromessas).getByText("Promessa de teste")).toBeInTheDocument();
+  expect(within(dialogPromessas).queryByText("Sob verificação")).not.toBeInTheDocument();
+
+  fireEvent.click(
+    within(dialogPromessas).getByRole("button", {
+      name: "Fechar lista de promessas",
+    }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Central de protestos" }));
+
+  const dialogCampanhas = screen.getByRole("dialog", {
+    name: "Campanhas e mobilizações",
+  });
+  expect(within(dialogCampanhas).getByRole("heading", { name: "Adesivaço BH" })).toBeInTheDocument();
 });
 
 test("exibe materias quando materias carregam e home falha", async () => {
