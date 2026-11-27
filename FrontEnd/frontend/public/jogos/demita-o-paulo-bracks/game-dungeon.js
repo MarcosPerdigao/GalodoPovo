@@ -22,7 +22,7 @@ function cue(kind,b,angle){state.attackCues ||= [];state.attackCues.push({kind,x
 updateBoss=function(dt){
  const b=state.boss;b.clock+=dt;b.flash=Math.max(0,b.flash-dt);const idleX=560+Math.sin(b.clock*(.65+state.level*.1))*(170+state.level*35),idleY=155+Math.sin(b.clock*.85+state.level)*65;
  if(b.dash){b.dash.time+=dt;const t=Math.min(1,b.dash.time/.4);b.x=b.dash.x+(b.dash.targetX-b.dash.x)*t;b.y=b.dash.y+(b.dash.targetY-b.dash.y)*t;if(t>=1)b.dash=null;}else{b.x+=(idleX-b.x)*(1-Math.exp(-dt*4));b.y+=(idleY-b.y)*(1-Math.exp(-dt*4));}b.shield=state.level===1&&b.clock%8>6.6;
- if(state.stun>0)return;b.fireAt-=dt;if(b.fireAt<=0){const a=Math.atan2(state.y-b.y,state.x-b.x),n=b.attackIndex||0,patterns=[['spread','ring','spread'],['stamp','sweep','stamp'],['dash','ring','spread'],['ring','stamp','sweep','dash']];cue(patterns[state.level][n%patterns[state.level].length],b,a);b.attackIndex=n+1;b.fireAt=b.hp<b.max*.5?1.1:1.65;}
+ updateBossDialogue(b);if(state.stun>0)return;b.fireAt-=dt;if(b.fireAt<=0){const a=Math.atan2(state.y-b.y,state.x-b.x),n=b.attackIndex||0,patterns=[['spread','ring','spread'],['stamp','sweep','stamp'],['dash','ring','spread'],['ring','stamp','sweep','dash']];cue(patterns[state.level][n%patterns[state.level].length],b,a);b.attackIndex=n+1;b.fireAt=b.hp<b.max*.5?1.1:1.65;}
  b.spawnAt-=dt;if(b.spawnAt<=0){spawnEnemy(['boleto','contrato','empresario','bagre'][state.level],80,370);spawnEnemy(['contrato','bagre','boleto','empresario'][state.level],1040,370);b.spawnAt=5;}
  if(Math.hypot(state.x-b.x,state.y-b.y)<52)hurt(9,'A MESA AVANÇOU SOBRE A COBRANÇA.');
 };
