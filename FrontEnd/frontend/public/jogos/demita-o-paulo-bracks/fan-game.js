@@ -43,7 +43,7 @@ function modal(title,body,buttons,tag='ARQUIBANCADA / CENTRAL DE COBRANÇA'){
  keys={};const m=$('#modal');$('#modal-content').innerHTML=`<div class="modal-icon">${tag}</div><h2>${title}</h2><p>${body}</p>`;
  buttons.forEach(([text,fn],i)=>{const b=document.createElement('button');b.className=i?'small':'primary';b.textContent=text;b.onclick=()=>{m.close();fn();};$('#modal-content').appendChild(b);});if(!m.open)m.showModal();
 }
-function instructions(){modal('Da arquibancada à decisão.','Você é o <b>torcedor</b>. Atravesse quatro fases: Bracks, Pedro Daniel, Rafael Menin e Rubens Menin.<br><br><b>1.</b> Reúna as três pautas nos balcões. Aproxime-se e aperte <b>E</b>.<br><b>2.</b> Vá à porta do chefe e aperte <b>E</b> para iniciar o confronto.<br><b>3.</b> Segure <b>E ou J</b> para lançar bolas de futebol com mira automática. Desvie das respostas até esvaziar a barra de resistência.<br><br><b>WASD / setas:</b> mover.<br><b>Espaço:</b> Raça, que afasta adversários e limpa os obstáculos próximos.<br><br>No celular: direcional, botão CHUTAR e botão RAÇA. Café recupera sanidade uma vez por fase. <b>Shift / ESQUIVAR:</b> avanço curto com proteção e recarga. Observe os avisos no chão antes dos ataques dos chefes.',[['PARTIU COBRAR',()=>{}]]);}
+function instructions(){modal('Da arquibancada à decisão.','Você é o <b>torcedor</b>. Atravesse quatro fases: Bracks, Pedro Daniel, Rafael Menin e Rubens Menin.<br><br><b>1.</b> Reúna as três pautas nos balcões. Aproxime-se e aperte <b>E</b>.<br><b>2.</b> Vá à porta do chefe e aperte <b>E</b> para iniciar o confronto.<br><b>3.</b> Segure <b>E ou J</b> para lançar bolas de futebol com mira automática, com intervalo de 0,45 segundo entre chutes. Desvie das respostas até esvaziar a barra de resistência.<br><br><b>WASD / setas:</b> mover.<br><b>Espaço:</b> Raça, que afasta adversários e limpa os obstáculos próximos.<br><br>No celular: direcional, botão CHUTAR e botão RAÇA. Café recupera sanidade uma vez por fase. <b>Shift / ESQUIVAR:</b> avanço curto com proteção e recarga. Observe os avisos no chão antes dos ataques dos chefes.',[['PARTIU COBRAR',()=>{}]]);}
 function menu(){$('#registration').classList.add('hidden');phase='menu';keys={};$('#menu').classList.remove('hidden');$('#game').classList.add('hidden');$('#settings').disabled=false;}
 function start(level=0){
  if(!profile){openRegistration(true);return;}
@@ -52,13 +52,18 @@ function start(level=0){
  $('#menu').classList.add('hidden');$('#game').classList.remove('hidden');$('#settings').disabled=true;
  loadLevel(level);toast('Você é a voz da Massa. Reúna as três pautas e procure o chefe.');$('#world').focus();
 }
+function createStationLayout(random=Math.random){
+ const slots=[155,465,790].flatMap(x=>[140,410].map(y=>({x,y})));
+ for(let i=slots.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[slots[i],slots[j]]=[slots[j],slots[i]];}
+ return slots.slice(0,5).map(p=>({x:p.x+Math.floor(random()*21)-10,y:p.y+Math.floor(random()*21)-10}));
+}
 function stations(){return [
  {x:155,y:140,w:150,h:65,kind:'pauta',n:0,name:levels[state.level].pautas[0]},
  {x:465,y:140,w:150,h:65,kind:'pauta',n:1,name:levels[state.level].pautas[1]},
  {x:790,y:140,w:150,h:65,kind:'pauta',n:2,name:levels[state.level].pautas[2]},
  {x:160,y:400,w:150,h:65,kind:'coffee',name:'CAFÉ DA MASSA'},
  {x:900,y:400,w:150,h:65,kind:'gate',name:levels[state.level].boss.toUpperCase()}
- ];}
+ ].map((d,i)=>({...d,...state.stationLayout?.[i]}));}
 function near(){return stations().find(d=>Math.hypot(state.x-d.x-d.w/2,state.y-d.y-d.h/2)<125);}
 function spawnEnemy(type,x,y){state.enemies.push({type,x,y,hp:types[type].hp,clock:Math.random()*2,fireAt:1.5+Math.random(),dash:0});}
 function placePlayer(x,y){state.x=x;state.y=y;state.prevX=x;state.prevY=y;state.vx=0;state.vy=0;state.walkCycle=0;state.cameraX=Math.max(0,Math.min(560,x-280));}
@@ -69,6 +74,7 @@ function spawnReinforcements(count){
  }
 }
 function loadLevel(level){
+ state.stationLayouts ||= {};state.stationLayout=state.stationLayouts[level] ||= createStationLayout();
  state.level=level;placePlayer(85,305);state.pautas=[false,false,false];state.shots=[];state.hazards=[];state.enemies=[];state.inv=2;state.slow=0;state.stun=0;state.cooldown=0;state.shotAt=0;state.coffee=false;state.boss=null;state.spawnAt=0;
  state.interlude=null;state.checkpointScore=state.score;state.checkpointTime=state.time;phase='corridor';
  spawnEnemy('boleto',370,300);spawnEnemy('contrato',720,300);spawnEnemy('bagre',980,300);spawnEnemy('empresario',570,500);
@@ -91,11 +97,12 @@ function beginBoss(){
   $('#boss-panel').classList.remove('hidden');$('#boss-quote').textContent='SEGURE E / J PARA COBRAR · DESVIE DAS RESPOSTAS · ESPAÇO: RAÇA';updateHud();draw();$('#world').focus();
  }]],'CHEFE '+(state.level+1)+' DE 4 · FALAS FICTÍCIAS');
 }
+const SHOT_INTERVAL=.45;
 function shoot(){
  if(!state||!['corridor','boss','interlude'].includes(phase)||state.shotAt>0)return;
  let target=phase==='boss'?state.boss:state.enemies.reduce((a,e)=>!a||Math.hypot(e.x-state.x,e.y-state.y)<Math.hypot(a.x-state.x,a.y-state.y)?e:a,null);
  const angle=target?Math.atan2(target.y-state.y,target.x-state.x):-Math.PI/2;
- state.shots.push({kind:'bola',x:state.x,y:state.y-8,vx:Math.cos(angle)*650,vy:Math.sin(angle)*650,life:1.8});state.shotAt=.16;beep(480,.025);
+ state.shots.push({kind:'bola',x:state.x,y:state.y-8,vx:Math.cos(angle)*650,vy:Math.sin(angle)*650,life:1.8});state.shotAt=SHOT_INTERVAL;beep(480,.025);
 }
 function special(){
  if(!state||!['corridor','boss','interlude'].includes(phase)||state.cooldown>0)return;
@@ -164,7 +171,7 @@ function step(dt){
 function winBoss(){
  const index=state.level;state.defeated[index]=true;state.score+=1000;phase='transition';keys={};$('#boss-panel').classList.add('hidden');beep(900,.3);updateHud();
  if(index===3){beginFinale();return;}
- modal(levels[index].boss+': cobrança vencida.','<b>'+levels[index].cleared+'</b><br><br>Mas o caminho foi bloqueado pela torcida fictícia <b>Amansados</b>. Vença as ondas para chegar ao próximo chefe.<br><br>Próximo chefe: <b>'+levels[index+1].boss+'</b>. Você recupera 20 de sanidade antes do bloqueio.',[['ENFRENTAR OS AMANSADOS',()=>{state.patience=Math.min(100,state.patience+20);beginInterlude();}]],'CHEFE '+(index+1)+' / 4 · PASSAGEM BLOQUEADA');
+ modal(levels[index].boss+': cobrança vencida.','<b>'+levels[index].cleared+'</b><br><br>Mas o caminho foi bloqueado pela torcida fictícia <b>Amansados</b>. Vença as ondas para chegar ao próximo chefe.<br><br>Próximo chefe: <b>'+levels[index+1].boss+'</b>. Sua sanidade continua com o valor atual.',[['ENFRENTAR OS AMANSADOS',beginInterlude]],'CHEFE '+(index+1)+' / 4 · PASSAGEM BLOQUEADA');
 }
 function beginInterlude(){
  state.interlude={wave:0,total:3,nextWaveAt:4.5};placePlayer(560,450);state.enemies=[];state.shots=[];state.hazards=[];state.particles=[];state.boss=null;state.inv=2;state.cooldown=0;state.slow=0;state.stun=0;state.shotAt=0;keys={};
@@ -177,7 +184,7 @@ function spawnOrganizadaWave(){
 }
 function winInterlude(){
  phase='transition';keys={};state.score+=500;state.hazards=[];
- modal('Caminho livre.','Os Amansados saíram da passagem.<br><br>Próxima parada: <b>'+levels[state.level+1].boss+'</b>.<br>Você recupera 15 de sanidade ao entrar na próxima fase.',[['ENTRAR NA PRÓXIMA FASE',()=>{state.patience=Math.min(100,state.patience+15);loadLevel(state.level+1);$('#world').focus();}]],'INTERVALO VENCIDO · TORCIDA FICTÍCIA');
+ modal('Caminho livre.','Os Amansados saíram da passagem.<br><br>Próxima parada: <b>'+levels[state.level+1].boss+'</b>.<br>Sua sanidade continua com o valor atual.',[['ENTRAR NA PRÓXIMA FASE',()=>{loadLevel(state.level+1);$('#world').focus();}]],'INTERVALO VENCIDO · TORCIDA FICTÍCIA');
 }
 function beginFinale(){
  phase='finale';keys={};state.enemies=[];state.shots=[];state.hazards=[];state.particles=[];state.boss=null;state.interlude=null;state.cinematic=null;state.slow=0;placePlayer(560,485);
@@ -245,12 +252,12 @@ function appendVictoryShare(result){
  if(image){const preview=document.createElement('img');preview.className='victory-share-image';preview.src=image.src;preview.alt='Comemoração da demissão no jogo, com pontuação, tempo e #ForaPauloBracks';preview.width=1200;preview.height=675;section.appendChild(preview);}
  const field=document.createElement('textarea');field.readOnly=true;field.rows=5;field.value=victoryShareText(result)+'\n'+PUBLIC_GAME_URL;field.setAttribute('aria-label','Sugestão de publicação no X');section.appendChild(field);
  const status=document.createElement('p');status.className='share-status';status.setAttribute('role','status');
- let nativeAvailable=false;try{nativeAvailable=!!(image?.file&&navigator.canShare?.({files:[image.file]}));}catch{}
- if(nativeAvailable){const native=document.createElement('button');native.type='button';native.className='primary';native.textContent='COMPARTILHAR IMAGEM E RESULTADO';native.onclick=async()=>{try{await navigator.share({title:'Vitória no Galo do Povo',text:field.value,files:[image.file]});status.textContent='Imagem e texto entregues ao menu de compartilhamento.';}catch(error){if(error.name!=='AbortError')status.textContent='Use Baixar imagem e anexe o arquivo ao publicar no X.';}};section.appendChild(native);}
+ const canCopyImage=!!(image?.file&&navigator.clipboard?.write&&typeof ClipboardItem!=='undefined');
+ if(canCopyImage){const share=document.createElement('button');share.type='button';share.className='primary';share.dataset.shareAction='image-x';share.textContent='COPIAR IMAGEM E ABRIR O X';share.onclick=async()=>{share.disabled=true;try{await navigator.clipboard.write([new ClipboardItem({'image/png':image.file})]);status.textContent='Imagem copiada! Cole no X com Ctrl+V ou Colar.';share.dispatchEvent(new Event('game-x-open'));window.location.assign(victoryShareUrl(result));}catch{status.textContent='O navegador não permitiu copiar a imagem. Baixe o PNG, abra o X com o texto e anexe o arquivo.';}finally{share.disabled=false;}};section.appendChild(share);}
  if(image){const download=document.createElement('a');download.className='small share-download';download.textContent='BAIXAR IMAGEM DA VITÓRIA';download.href=image.src;download.download='demissao-paulo-bracks-'+result.score+'.png';section.appendChild(download);}
- const link=document.createElement('a');link.className='primary';link.textContent='ABRIR X COM O TEXTO';link.href=victoryShareUrl(result);link.target='_blank';link.rel='noopener noreferrer';section.appendChild(link);
- if(image){const hint=document.createElement('p');hint.className='share-hint';hint.textContent='No X pelo navegador, anexe a imagem baixada ao texto sugerido. Em aparelhos compatíveis, use o compartilhamento de imagem e resultado.';section.appendChild(hint);}
- const copy=document.createElement('button');copy.type='button';copy.className='small';copy.textContent='COPIAR TEXTO';section.appendChild(copy);
+ const link=document.createElement('a');link.className=canCopyImage?'small':'primary';link.textContent='ABRIR X COM O TEXTO';link.href=victoryShareUrl(result);link.target='_blank';link.rel='noopener noreferrer';section.appendChild(link);
+ if(image){const hint=document.createElement('p');hint.className='share-hint';hint.textContent=canCopyImage?'O primeiro botão copia a imagem e abre o X nesta aba com o texto pronto. No X, pressione Ctrl+V (ou Colar) para anexar a imagem e revise antes de publicar.':'Neste navegador, baixe a imagem e anexe o PNG ao texto sugerido no X.';section.appendChild(hint);}
+ const copy=document.createElement('button');copy.type='button';copy.className='small';copy.dataset.shareAction='text_copy';copy.textContent='COPIAR TEXTO';section.appendChild(copy);
  section.appendChild(status);
  copy.onclick=async()=>{try{if(!navigator.clipboard?.writeText)throw Error('Clipboard unavailable');await navigator.clipboard.writeText(field.value);status.textContent='Texto copiado. Cole no X ou onde preferir.';}catch{field.focus();field.select();status.textContent='Texto selecionado. Use a opção Copiar do seu aparelho ou Ctrl+C.';}};
  const content=$('#modal-content');content.insertBefore(section,content.querySelector('button'));
