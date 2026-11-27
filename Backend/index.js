@@ -8,6 +8,7 @@ const Parser = require("rss-parser");
 const cron = require("node-cron");
 const mongoose = require("mongoose");
 const { normalizarUrl } = require("./lib/urlUtils");
+const { createGameRouter, sameHash, hash } = require("./lib/game");
 
 const app = express();
 
@@ -103,6 +104,7 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .map((item) => item.trim())
   .filter(Boolean);
 
+app.set("trust proxy", 1);
 app.use(helmet());
 
 app.use(
@@ -110,7 +112,7 @@ app.use(
     origin: function (origin, callback) {
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      if ((allowedOrigins.length ? allowedOrigins : ["https://www.galodopovo.com.br", "https://galodopovo.com.br", ...(process.env.NODE_ENV === "production" ? [] : ["http://localhost:3000", "http://127.0.0.1:4175"])]).includes(origin)) {
         return callback(null, true);
       }
 
@@ -132,7 +134,7 @@ function requireAdmin(req, res, next) {
     });
   }
 
-  if (!chaveRecebida || chaveRecebida !== chaveEsperada) {
+  if (!chaveRecebida || !sameHash(hash(chaveRecebida), hash(chaveEsperada))) {
     return res.status(401).json({
       success: false,
       message: "Acesso administrativo não autorizado.",
@@ -141,6 +143,8 @@ function requireAdmin(req, res, next) {
 
   next();
 }
+
+app.use("/api/game", createGameRouter({ mongoose, requireAdmin }));
 
 const materiaSchema = new mongoose.Schema({
   titulo: { type: String, required: true, trim: true },

@@ -6,5 +6,5 @@ test("leva o visitante ao jogo no próprio portal e informa sobre a sátira e o 
   const playLink = screen.getByRole("link", { name: "Jogar agora" });
   expect(playLink).toHaveAttribute("href", "/jogos/demita-o-paulo-bracks/");
   expect(playLink).not.toHaveAttribute("target", "_blank");
-  expect(screen.getByText(/jogo de paródia/i)).toHaveTextContent(/cadastro do torcedor fica somente no navegador/i);
+  expect(screen.getByText(/jogo de paródia/i)).toHaveTextContent(/perfil fica no navegador/i);
 });

@@ -20,7 +20,7 @@ export default function GamesSection() {
           <p>Crie seu torcedor, reúna as cobranças da Massa e atravesse as mesas de Bracks, Pedro Daniel, Rafael Menin e Rubens Menin. A decisão só sai depois da última assinatura.</p>
           <div className="mass-game__tags"><span>Computador e celular</span><span>Sem download</span><span>Perfil local</span></div>
           <a className="btn btn--primary" href="/jogos/demita-o-paulo-bracks/">Jogar agora</a>
-          <p className="mass-game__note">Jogo de paródia. Falas, habilidades e situações fictícias, sem vínculo oficial com o clube. O cadastro do torcedor fica somente no navegador.</p>
+          <p className="mass-game__note">Jogo de paródia. Falas, habilidades e situações fictícias, sem vínculo oficial com o clube. O perfil fica no navegador. O ranking público por apelido é opcional.</p>
         </div>
       </article>
     </section>

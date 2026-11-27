@@ -1,0 +1,143 @@
+GALO DO POVO — JOGO, PRIVACIDADE E SEGURANÇA
+Revisão técnica em 27/11/2026. Etapa: feat/dungeon-ranking-seguranca.
+
+ENTREGA
+Jogo em destaque na entrada do portal e card na Central de Protestos.
+Paleta de carvão, branco e dourado; mensagens maiores; prévia ampliada.
+Ídolo livre na camisa e número centralizado. Perfil salvo neste aparelho
+até exclusão ou no armazenamento da aba, conforme escolha do jogador.
+Perfis anteriores são preservados, mas exigem concordância com a versão 2.
+Tema original “Expediente da Massa”, sintetizado pelo próprio navegador.
+Som ativado por padrão, respeitando a preferência salva. O navegador exige
+uma interação antes de liberar o áudio. Engrenagem controla volume e música
+e pausa a partida. Esquiva com Shift ou botão, ataques anunciados, chefes
+nos dois eixos e padrões diferentes. O mapa CT/SEDE/Arena continua futuro.
+
+TERMOS
+O texto distingue ficção, crítica e fatos. Falas, poderes, Amansados e a
+demissão final não são apresentados como acontecimentos reais. Há aviso
+de independência do clube/SAF, regra contra ameaças e exposição de terceiros,
+ausência de compras/prêmios e canal para correção ou retirada de conteúdo.
+O formulário atual do portal é o canal de privacidade indicado pelo dono.
+Não foi inventada razão social ou identidade civil do responsável: esses
+dados ainda precisam ser definidos e avaliados com assessoramento jurídico.
+
+Termos não impedem ações judiciais. A exceção de paródia da Lei 9.610/98,
+art. 47, trata de direitos autorais e não elimina direitos ao nome, honra,
+imagem ou reparação. Recomenda-se revisão jurídica dos nomes, caricaturas,
+frases e do título antes de ampliar a divulgação. Não há parecer jurídico
+ou certificação de conformidade nesta revisão técnica.
+
+DADOS E CONSENTIMENTO
+Sem adesão: nenhuma partida é enviada pela integração do ranking.
+Nome, sobrenome, idade, ídolo e aparência ficam no navegador.
+O jogo aceita nomes de exibição; não é necessário usar nome civil.
+O perfil não sincroniza entre aparelhos. Navegadores podem restaurar abas
+e seus dados de sessão. Recorde e preferências de áudio têm armazenamento
+local independente do perfil, até limpeza dos dados do site.
+
+Ranking: caixa separada, opcional, inicialmente desmarcada. Nesta versão,
+online apenas para quem declara 18 anos ou mais. Não há verificação de idade
+nem alegação de que essa política substitui a análise da legislação sobre
+crianças e adolescentes. O modo local permanece disponível.
+São enviados apelido, identificadores aleatórios, chave aleatória de posse,
+versão do consentimento, horário de início, resultado e contadores de ações.
+O servidor armazena hashes das chaves. Só apelido, pontos e tempo são públicos.
+O placar semanal começa na segunda-feira no fuso America/Sao_Paulo.
+Registros de partidas expiram em 90 dias. O perfil expira 90 dias após sua
+última participação. Dados expirados são filtrados e têm índice TTL para
+remoção física posterior pelo MongoDB.
+Retirar a adesão ou apagar o perfil solicita exclusão autenticada na API.
+Retirar a adesão interrompe novos envios mesmo se a API estiver indisponível.
+Falha de exclusão online é informada; a chave fica para nova tentativa.
+Apagar o perfil local funciona mesmo com a exclusão online pendente.
+Apagar dados do navegador ou fechar uma aba com perfil temporário pode
+eliminar essa chave: o formulário do portal oferece o contato alternativo.
+Não há exportação automática de dados nem exclusão de posts externos.
+Vercel, Render e MongoDB podem tratar registros técnicos da infraestrutura,
+inclusive fora do Brasil; contrato, região, backups e retenção de logs dos
+provedores não foram auditados. A API de partidas não persiste IP no banco.
+
+ESTATÍSTICAS E ACESSO
+/admin/jogos usa a ADMIN_TOKEN já existente no backend. Não há segredo
+embutido no frontend. A chave digitada fica na memória e é limpa ao sair.
+O cache legado da chave no localStorage é removido. Respostas atrasadas
+não reabrem o painel do jogo depois da saída.
+São contados apenas perfis/partidas com adesão, e não todos os visitantes
+ou pessoas únicas. Painel: inícios, conclusões, vitórias, derrotas por
+tentativa, melhores resultados, resultados recentes e moderação do placar.
+Aberturas do X, cópias, cliques de download e compartilhamento são ações,
+não publicações confirmadas. A integração não consulta contas ou posts do X.
+O ranking é casual: resultados vêm do cliente, com limites básicos de
+pontuação/tempo e exigência dos quatro chefes. Não é um sistema antifraude
+adequado a premiações ou competições de alto valor.
+
+MEDIDAS TÉCNICAS
+Tokens de perfil/partida aleatórios de 256 bits; apenas hashes no banco.
+Verificação de propriedade na conclusão, eventos e exclusão.
+Conclusão idempotente e deduplicação de eventos por UUID.
+Campos públicos explícitos; validação de apelidos, números e limites.
+Limite de requisições e limite de corpo JSON de 20 KB.
+Erros públicos genéricos; nenhum segredo acrescentado a logs ou arquivos.
+CORS sem fallback aberto a qualquer origem; comparação segura da chave admin.
+CSP restrita ao jogo, bloqueio de frames, nosniff e política de referência
+no vercel.json. Fontes externas do jogo removidas. Cabeçalhos precisam de
+confirmação na hospedagem real depois da publicação.
+Não foram alterados arquivos .env. A busca de nomes de arquivos versionados
+não encontrou .env, certificados .pem ou chaves .key; isso não substitui uma
+varredura do histórico Git nem rotação de credenciais eventualmente expostas.
+
+DEPENDÊNCIAS
+Backend: auditoria inicial 8 pacotes vulneráveis (2 críticos, 4 altos,
+2 moderados). Atualizações compatíveis e Nodemailer 10.6.1 eliminaram os
+alertas no lockfile: 0 na consulta desta data. A mudança de versão principal
+do Nodemailer foi motivada pelas correções; a geração de email foi testada
+sem envio real. SMTP de produção não foi acionado.
+Frontend: 63 alertas iniciais (4 críticos) caíram para 32: 16 altos,
+7 moderados e 9 baixos; nenhum crítico restante. Persistem alertas na cadeia
+do Create React App (ex.: SVGO/nth-check, PostCSS aninhado, serialização,
+Jest/jsdom e servidor de desenvolvimento). Não foi aplicado audit fix --force,
+que sugere substituir react-scripts por 0.0.0 e não é uma migração válida.
+O portal de produção entrega arquivos estáticos; não expor npm start à rede
+pública. A análise de alcançabilidade de cada alerta e substituições pontuais
+de ferramentas seguem como trabalho futuro, preservando a stack obrigatória.
+
+VALIDAÇÃO
+Backend: node --check index.js; npm test — 17 testes aprovados.
+Frontend: CI=true npm test -- --watchAll=false --runInBand — 13 aprovados.
+npm run test:game — campanha completa, quatro chefes, ataques e movimento,
+esquiva, persistência, finale, imagem/compartilhamento e teste de privacidade
+da integração online aprovados. CI=true npm run build — compilação aprovada.
+Sintaxe dos novos scripts estáticos verificada com node --check.
+Conferência visual desktop: cadastro, ídolo/número, batalha, engrenagem,
+destaque do portal e card da Central de Protestos. Layout responsivo incluído;
+validação em aparelhos móveis físicos não executada.
+Testes da API usam modelos em memória. Não houve escrita no MongoDB de
+produção, login com chave real, envio de email ou postagem em rede social.
+
+PUBLICAÇÃO E LIMITES
+Não fazer merge automático (AGENTS.md). Integrar o PR após revisão.
+Publicar backend e frontend pelo fluxo já existente Render/Vercel.
+Executar npm ci no backend antes de iniciar: o repositório legado contém
+node_modules versionado, que não deve substituir a instalação do lockfile.
+Não são necessárias novas variáveis de ambiente. Confirmar que ALLOWED_ORIGINS,
+se configurada, inclui https://www.galodopovo.com.br e o domínio sem www.
+Após deploy: conferir /api/game/leaderboard, recusa sem chave no admin,
+índices TTL, uma partida de teste com adesão, exclusão e cabeçalhos do jogo.
+Uma atualização só do frontend funciona localmente caso a API esteja fora,
+mas ranking e painel dependem do backend atualizado.
+Chave administrativa compartilhada e limitação por processo são controles
+iniciais; autenticação individual com MFA, trilha de auditoria e limite
+distribuído merecem evolução. Não foi realizado pentest completo.
+
+FONTES OFICIAIS CONSULTADAS
+Lei 9.610/98, art. 47:
+https://www.planalto.gov.br/ccivil_03/leis/l9610.htm
+Código Civil, direitos da personalidade e responsabilidade:
+https://www.planalto.gov.br/ccivil_03/leis/2002/l10406compilada.htm
+LGPD, transparência, consentimento, direitos e segurança:
+https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709compilado.htm
+ANPD, orientações de segurança:
+https://www.gov.br/anpd/pt-br/centrais-de-conteudo/materiais-educativos-e-publicacoes
+Nodemailer, alterações oficiais:
+https://github.com/nodemailer/nodemailer/blob/master/CHANGELOG.md

@@ -2,12 +2,13 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import GameAdmin from './GameAdmin';
 import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    {window.location.pathname.replace(/\/$/, '') === '/admin/jogos' ? <GameAdmin /> : <App />}
   </React.StrictMode>
 );
 
