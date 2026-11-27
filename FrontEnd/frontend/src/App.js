@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 import GamesSection from "./GamesSection";
+import GameHero from "./GameHero";
 
 const API_BASE =
   window.location.hostname === "localhost"
@@ -11,6 +12,7 @@ const IS_ADMIN_ROUTE = window.location.pathname === "/admin";
 const ITENS_POR_PAGINA = 10;
 
 export default function App() {
+  useEffect(() => { try { localStorage.removeItem("galo_admin_token"); } catch {} }, []);
   const [materias, setMaterias] = useState([]);
   const [contador, setContador] = useState({
     dias: 0,
@@ -43,8 +45,9 @@ export default function App() {
   const [erroFormulario, setErroFormulario] = useState("");
 
   const [adminToken, setAdminToken] = useState(
-    localStorage.getItem("galo_admin_token") || "",
+    "",
   );
+  const adminTokenRef = useRef("");
   const [adminPromessas, setAdminPromessas] = useState([]);
   const [adminCarregando, setAdminCarregando] = useState(false);
   const [adminErro, setAdminErro] = useState("");
@@ -243,6 +246,7 @@ export default function App() {
 
       const data = await resposta.json();
 
+      if (adminTokenRef.current !== adminToken) return;
       if (!resposta.ok) {
         throw new Error(
           data?.message || "Não foi possível carregar as promessas.",
@@ -461,8 +465,11 @@ export default function App() {
   };
 
   const salvarAdminToken = (valor) => {
+    adminTokenRef.current = valor;
     setAdminToken(valor);
-    localStorage.setItem("galo_admin_token", valor);
+    setAdminPromessas([]);
+    setAdminCarregando(false);
+    try { localStorage.removeItem("galo_admin_token"); } catch {}
   };
 
   const handleFormPromessaAdminChange = (e) => {
@@ -645,6 +652,7 @@ export default function App() {
                 color: "#fff",
               }}
             />
+            <p><a href="/admin/jogos">Painel interno do jogo</a> · <button type="button" onClick={() => salvarAdminToken("")}>Sair e limpar chave</button></p>
           </div>
 
           <div
@@ -1004,6 +1012,7 @@ export default function App() {
             </p>
 
             <div className="campaign-grid">
+              <article className="campaign-item"><h3>Demita o Paulo Bracks</h3><p>Proteste com humor: crie seu torcedor e enfrente a burocracia nesta paródia de futebol. Falas e situações fictícias.</p><div className="campaign-links"><a href="/jogos/demita-o-paulo-bracks/">Jogar e fazer a cobrança</a></div></article>
               <article className="campaign-item">
                 <h3>#SAFNota0!</h3>
                 <p>
@@ -1189,7 +1198,8 @@ export default function App() {
       </header>
 
       <main id="topo">
-        <section className="hero-section">
+        <GameHero />
+        <section className="hero-section" id="portal-editorial">
           <div className="page-shell hero-grid">
             <div className="hero-copy">
               <p className="section-kicker">Registro independente da era SAF</p>

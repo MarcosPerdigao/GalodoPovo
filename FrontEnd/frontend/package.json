@@ -16,7 +16,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "test:game": "node scripts/check-game.cjs",
+    "test:game": "node scripts/check-game.cjs && node scripts/check-game-network.cjs",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
