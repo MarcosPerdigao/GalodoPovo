@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import "./App.css";
+import GamesSection from "./GamesSection";
 
 const API_BASE =
   window.location.hostname === "localhost"
@@ -184,6 +185,12 @@ export default function App() {
 
     carregarDados();
   }, []);
+
+  useEffect(() => {
+    if (window.location.hash === "#jogos") {
+      document.getElementById("jogos")?.scrollIntoView({ block: "start" });
+    }
+  }, [carregando]);
 
   useEffect(() => {
     try {
@@ -1175,6 +1182,7 @@ export default function App() {
             <a href="#promessas">Promessas</a>
             <a href="#linha-do-tempo">Linha do tempo</a>
             <a href="#inicio-dossie">{"Dossi\u00ea"}</a>
+            <a href="#jogos">Jogos</a>
             <a href="#form-massa">{"Enviar informa\u00e7\u00e3o"}</a>
           </nav>
         </div>
@@ -1523,6 +1531,8 @@ export default function App() {
             </nav>
           )}
         </section>
+
+        <GamesSection />
 
         <section className="section-block page-shell contribute-section" id="form-massa" aria-labelledby="contribua-titulo">
           <div className="section-heading">
