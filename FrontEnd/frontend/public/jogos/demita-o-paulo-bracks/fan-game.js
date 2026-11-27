@@ -2,6 +2,23 @@
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const defaultAvatar={skin:'#c6a183',hairStyle:'curto',hairColor:'#302b25',shirt:'listrada',accessory:'bone',number:12};
 let profile=null,avatar={...defaultAvatar};
+const FAN_LEVELS=[{xp:0,name:'Torcedor',power:'Chute simples'},{xp:300,name:'Fôlego',power:'Regeneração'},{xp:950,name:'Dobradinha',power:'Chute duplo'},{xp:1800,name:'Arquibancada',power:'Leque de bolas'},{xp:3000,name:'Massa completa',power:'Chute circular'}];
+let bossTutorialSeen=false;try{bossTutorialSeen=localStorage.getItem('gdp-boss-tutorial-v1')==='seen';}catch{}
+function fanLevelForXP(xp){let level=1;while(level<FAN_LEVELS.length&&xp>=FAN_LEVELS[level].xp)level++;return level;}
+function gainXP(amount){
+ if(!state||amount<=0)return;const before=state.fanLevel;state.xp+=amount;state.fanLevel=fanLevelForXP(state.xp);
+ if(state.fanLevel>before){state.upgradeUntil=state.time+5;toast('NÍVEL '+state.fanLevel+' · '+FAN_LEVELS[state.fanLevel-1].power.toUpperCase()+' DESBLOQUEADO!');beep(820,.18);}updateXPHud();
+}
+function fanShotAngles(angle){if(state.fanLevel>=5)return [-.28,-.14,0,.14,.28,Math.PI/2,Math.PI,Math.PI*1.5].map(a=>angle+a);if(state.fanLevel>=4)return [-.28,-.14,0,.14,.28].map(a=>angle+a);if(state.fanLevel>=3)return [angle-.06,angle+.06];return [angle];}
+function updateXPHud(){
+ if(!state)return;const level=state.fanLevel||1,current=FAN_LEVELS[level-1],next=FAN_LEVELS[level],earned=state.xp-current.xp,needed=next?next.xp-current.xp:0;
+ $('#fan-level').textContent='NÍVEL '+level+' · '+current.name.toUpperCase();$('#xp-count').textContent=next?earned+' / '+needed+' XP':state.xp+' XP · MÁXIMO';const percent=next?Math.min(100,earned/needed*100):100;$('#xp-bar').style.width=percent+'%';$('#xp-progress').setAttribute('aria-valuenow',String(Math.round(percent)));$('#xp-progress').setAttribute('aria-valuetext',state.xp+' XP, nível '+level);
+ $('#xp-next').textContent=next?'PRÓXIMO: '+next.power.toUpperCase():'TODOS OS PODERES DESBLOQUEADOS';$('#xp-powers').textContent=(state.upgradeUntil>state.time?'NOVO: ':'')+(level===2?'Regeneração após 5s sem dano':current.power)+(level>=3?' · Regeneração após 5s sem dano':'');$('#xp-progress').classList.toggle('xp-upgrade',state.upgradeUntil>state.time);
+}
+function drawRoomDecor(){}
+function drawRoomStation(){}
+function updateBossDialogue(){}
+function drawBossDialogue(b){label(b.quote||levels[state.level].quote,b.x,b.y+84,'#e2dbb9',14);}
 const levels=[
  {boss:'Paulo Bracks',area:'CIDADE DO GALO',title:'O futebol pede explicações.',color:'#28392b',hp:22,quote:'“Precisamos confiar no processo.”',attack:'PROCESSO',pautas:['Planejamento do elenco','Critérios de contratação','Resultados do futebol'],cleared:'Você furou a blindagem do futebol. Agora leve o processo ao Pedro Daniel.'},
  {boss:'Pedro Daniel',area:'ESCRITÓRIO DO CEO',title:'O labirinto dos pareceres.',color:'#29353c',hp:28,quote:'“Ainda faltam alguns alinhamentos.”',attack:'PARECER',pautas:['Parecer jurídico','Validação financeira','Plano de transição'],cleared:'O processo saiu da mesa do CEO. Rafael ainda precisa autorizar.'},
@@ -43,11 +60,11 @@ function modal(title,body,buttons,tag='ARQUIBANCADA / CENTRAL DE COBRANÇA'){
  keys={};const m=$('#modal');$('#modal-content').innerHTML=`<div class="modal-icon">${tag}</div><h2>${title}</h2><p>${body}</p>`;
  buttons.forEach(([text,fn],i)=>{const b=document.createElement('button');b.className=i?'small':'primary';b.textContent=text;b.onclick=()=>{m.close();fn();};$('#modal-content').appendChild(b);});if(!m.open)m.showModal();
 }
-function instructions(){modal('Da arquibancada à decisão.','Você é o <b>torcedor</b>. Atravesse quatro fases: Bracks, Pedro Daniel, Rafael Menin e Rubens Menin.<br><br><b>1.</b> Reúna as três pautas nos balcões. Aproxime-se e aperte <b>E</b>.<br><b>2.</b> Vá à porta do chefe e aperte <b>E</b> para iniciar o confronto.<br><b>3.</b> Segure <b>E ou J</b> para lançar bolas de futebol com mira automática, com intervalo de 0,45 segundo entre chutes. Desvie das respostas até esvaziar a barra de resistência.<br><br><b>WASD / setas:</b> mover.<br><b>Espaço:</b> Raça, que afasta adversários e limpa os obstáculos próximos.<br><br>No celular: direcional, botão CHUTAR e botão RAÇA. Café recupera sanidade uma vez por fase. <b>Shift / ESQUIVAR:</b> avanço curto com proteção e recarga. Observe os avisos no chão antes dos ataques dos chefes.',[['PARTIU COBRAR',()=>{}]]);}
+function instructions(){modal('Da arquibancada à decisão.','Você é o <b>torcedor</b>. Atravesse quatro fases: Bracks, Pedro Daniel, Rafael Menin e Rubens Menin.<br><br><b>1.</b> Reúna as três pautas nos balcões. Aproxime-se e aperte <b>E</b>.<br><b>2.</b> Vá à porta do chefe e aperte <b>E</b> para iniciar o confronto.<br><b>3.</b> Segure <b>E ou J</b> para lançar bolas de futebol com mira automática, com intervalo de 0,45 segundo entre chutes. Desvie das respostas até esvaziar a barra de resistência.<br><br><b>WASD / setas:</b> mover.<br><b>Espaço:</b> Raça, que afasta adversários e limpa os obstáculos próximos.<br><br>No celular: direcional, botão CHUTAR e botão RAÇA. Café recupera sanidade uma vez por fase. <b>XP:</b> pautas e vitórias desbloqueiam regeneração após 5s sem dano, chute duplo, leque e chute circular. A progressão vale nesta partida. <b>Shift / ESQUIVAR:</b> avanço curto com proteção e recarga. Observe os avisos no chão antes dos ataques dos chefes.',[['PARTIU COBRAR',()=>{}]]);}
 function menu(){$('#registration').classList.add('hidden');phase='menu';keys={};$('#menu').classList.remove('hidden');$('#game').classList.add('hidden');$('#settings').disabled=false;}
 function start(level=0){
  if(!profile){openRegistration(true);return;}
- state={level,x:85,y:305,patience:100,time:0,score:0,pautas:[false,false,false],defeated:Array(4).fill(false),shots:[],hazards:[],enemies:[],particles:[],cooldown:0,shotAt:0,inv:2,slow:0,stun:0,coffee:false,boss:null,interlude:null,spawnAt:0,checkpointScore:0,checkpointTime:0};
+ state={level,x:85,y:305,patience:100,time:0,score:0,xp:0,fanLevel:1,checkpointXP:0,lastDamageAt:0,upgradeUntil:0,pautas:[false,false,false],defeated:Array(4).fill(false),shots:[],hazards:[],enemies:[],particles:[],cooldown:0,shotAt:0,inv:2,slow:0,stun:0,coffee:false,boss:null,interlude:null,spawnAt:0,checkpointScore:0,checkpointTime:0};
  for(let i=0;i<level;i++)state.defeated[i]=true;
  $('#menu').classList.add('hidden');$('#game').classList.remove('hidden');$('#settings').disabled=true;
  loadLevel(level);toast('Você é a voz da Massa. Reúna as três pautas e procure o chefe.');$('#world').focus();
@@ -76,7 +93,7 @@ function spawnReinforcements(count){
 function loadLevel(level){
  state.stationLayouts ||= {};state.stationLayout=state.stationLayouts[level] ||= createStationLayout();
  state.level=level;placePlayer(85,305);state.pautas=[false,false,false];state.shots=[];state.hazards=[];state.enemies=[];state.inv=2;state.slow=0;state.stun=0;state.cooldown=0;state.shotAt=0;state.coffee=false;state.boss=null;state.spawnAt=0;
- state.interlude=null;state.checkpointScore=state.score;state.checkpointTime=state.time;phase='corridor';
+ state.interlude=null;state.checkpointScore=state.score;state.checkpointTime=state.time;state.checkpointXP=state.xp;phase='corridor';
  spawnEnemy('boleto',370,300);spawnEnemy('contrato',720,300);spawnEnemy('bagre',980,300);spawnEnemy('empresario',570,500);
  spawnReinforcements(3+level*2);
  $('#boss-panel').classList.add('hidden');updateHud();draw();
@@ -84,35 +101,35 @@ function loadLevel(level){
 function interact(){
  if(phase==='finale'){if(Math.hypot(state.x-560,state.y-260)<135)beginDismissal();else toast('A decisão já foi tomada. Vá até a mesa para assinar.');return;}
  if(phase!=='corridor')return;const d=near();if(!d)return;
- if(d.kind==='pauta'){if(!state.pautas[d.n]){state.pautas[d.n]=true;state.score+=150;toast('PAUTA REUNIDA: '+d.name+'.');beep(750);}else toast('Essa pauta já está na cobrança.');}
+ if(d.kind==='pauta'){if(!state.pautas[d.n]){state.pautas[d.n]=true;state.score+=150;toast('PAUTA REUNIDA: '+d.name+'.');gainXP(75);beep(750);}else toast('Essa pauta já está na cobrança.');}
  if(d.kind==='coffee'){if(state.coffee)toast('O café acabou. Só na próxima fase.');else{state.coffee=true;state.patience=Math.min(100,state.patience+18);toast('Café da Massa: +18 de sanidade.');beep(660);}}
  if(d.kind==='gate'){if(state.pautas.filter(Boolean).length<3){toast('Reúna as três pautas antes de cobrar '+levels[state.level].boss+'.');beep(120);}else beginBoss();}
  updateHud();
 }
 function beginBoss(){
- const cfg=levels[state.level];phase='briefing';keys={};$('#prompt').style.display='none';
- modal(cfg.boss+' entrou na sala.','<b>'+cfg.title+'</b><br><br>Agora é um confronto arcade: <b>segure E ou J</b> para lançar bolas de futebol com mira automática. Mova-se para desviar das respostas. A barra vermelha mostra a resistência do chefe.<br><br>'+(state.level===0?'Vencer o Bracks abre o processo. A demissão só sai depois de chegar ao Rubens.':'Suas pautas estão reunidas. É hora de fazer o pedido avançar.'),[['COMEÇAR A COBRANÇA',()=>{
+ const cfg=levels[state.level];keys={};$('#prompt').style.display='none';const fight=()=>{
   phase='boss';state.enemies=[];state.shots=[];state.hazards=[];placePlayer(560,485);state.inv=2;
-  state.boss={x:560,y:145,hp:cfg.hp,max:cfg.hp,clock:0,fireAt:.7,spawnAt:2.5,shield:false,flash:0};
-  $('#boss-panel').classList.remove('hidden');$('#boss-quote').textContent='SEGURE E / J PARA COBRAR · DESVIE DAS RESPOSTAS · ESPAÇO: RAÇA';updateHud();draw();$('#world').focus();
- }]],'CHEFE '+(state.level+1)+' DE 4 · FALAS FICTÍCIAS');
+  state.boss={x:560,y:145,hp:cfg.hp,max:cfg.hp,clock:0,fireAt:.7,spawnAt:2.5,shield:false,flash:0,quote:cfg.quote,quoteAt:4.5,quoteBand:'normal',quoteIndex:0};
+  $('#boss-panel').classList.remove('hidden');$('#boss-quote').textContent='FALA FICTÍCIA · '+cfg.quote;updateHud();draw();$('#world').focus();
+ };if(bossTutorialSeen){fight();return;}phase='briefing';
+ modal('Primeiro confronto com um chefe.','<b>Segure E ou J</b> para chutar com mira automática e intervalo de 0,45 segundo. Desvie das áreas marcadas no chão.<br><br><b>Shift:</b> esquiva. <b>Espaço:</b> Raça. A barra vermelha é a resistência do chefe.<br><br>Ganhe XP com pautas e adversários para desbloquear poderes. Este aviso aparece uma vez neste navegador; você pode consultar COMO JOGAR no menu.',[['COMEÇAR A COBRANÇA',()=>{bossTutorialSeen=true;try{localStorage.setItem('gdp-boss-tutorial-v1','seen');}catch{}fight();}]],'TUTORIAL · CONFRONTO ARCADE');
 }
 const SHOT_INTERVAL=.45;
 function shoot(){
  if(!state||!['corridor','boss','interlude'].includes(phase)||state.shotAt>0)return;
  let target=phase==='boss'?state.boss:state.enemies.reduce((a,e)=>!a||Math.hypot(e.x-state.x,e.y-state.y)<Math.hypot(a.x-state.x,a.y-state.y)?e:a,null);
  const angle=target?Math.atan2(target.y-state.y,target.x-state.x):-Math.PI/2;
- state.shots.push({kind:'bola',x:state.x,y:state.y-8,vx:Math.cos(angle)*650,vy:Math.sin(angle)*650,life:1.8});state.shotAt=SHOT_INTERVAL;beep(480,.025);
+ for(const direction of fanShotAngles(angle))state.shots.push({kind:'bola',x:state.x,y:state.y-8,vx:Math.cos(direction)*650,vy:Math.sin(direction)*650,life:1.8});state.shotAt=SHOT_INTERVAL;beep(480,.025);
 }
 function special(){
  if(!state||!['corridor','boss','interlude'].includes(phase)||state.cooldown>0)return;
  state.cooldown=12;state.stun=3;state.hazards=[];
- state.enemies.forEach(e=>{if(e.hp>0&&Math.hypot(e.x-state.x,e.y-state.y)<300){e.hp=0;state.score+=100;}});
+ state.enemies.forEach(e=>{if(e.hp>0&&Math.hypot(e.x-state.x,e.y-state.y)<300){e.hp=0;state.score+=100;gainXP(e.type==='amansado'?35:40);}});
  if(phase==='boss'&&Math.hypot(state.boss.x-state.x,state.boss.y-state.y)<350&&!state.boss.shield){state.boss.hp=Math.max(0,state.boss.hp-3);state.boss.flash=.2;}
  state.particles.push({x:state.x,y:state.y,life:.6,r:15});toast('RAÇA! Obstáculos limpos. Adversários atordoados por 3s.');beep(160,.3);
  if(phase==='boss'&&state.boss.hp<=0)winBoss();updateHud();
 }
-function hurt(amount,text){if(state.inv>0||!['corridor','boss','interlude'].includes(phase))return;state.patience=Math.max(0,state.patience-amount);state.inv=1.4;beep(110,.12);toast(text+' −'+amount+' de sanidade.');if(state.patience<=0)lose();}
+function hurt(amount,text){if(state.inv>0||!['corridor','boss','interlude'].includes(phase))return;state.patience=Math.max(0,state.patience-amount);state.lastDamageAt=state.time;state.inv=1.4;beep(110,.12);toast(text+' −'+amount+' de sanidade.');if(state.patience<=0)lose();}
 function fireHazard(x,y,angle,speed,text,damage=7){state.hazards.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,text,damage,life:8});}
 function movePlayer(dt){
  const dx=Number(!!(keys.d||keys.arrowright))-Number(!!(keys.a||keys.arrowleft)),dy=Number(!!(keys.s||keys.arrowdown))-Number(!!(keys.w||keys.arrowup)),len=Math.hypot(dx,dy)||1,speed=state.slow>0?180:305;
@@ -145,7 +162,7 @@ function updateBoss(dt){
 function updateShots(dt){
  for(const p of state.shots){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
   if(phase==='boss'&&Math.hypot(p.x-state.boss.x,p.y-state.boss.y)<44){p.life=0;if(!state.boss.shield){state.boss.hp=Math.max(0,state.boss.hp-1);state.boss.flash=.12;state.score+=20;}}
-  else for(const e of state.enemies){if(e.hp>0&&Math.hypot(p.x-e.x,p.y-e.y)<24){p.life=0;e.hp--;if(e.hp<=0){state.score+=100;state.particles.push({x:e.x,y:e.y,life:.35,r:8});}break;}}
+  else for(const e of state.enemies){if(e.hp>0&&Math.hypot(p.x-e.x,p.y-e.y)<24){p.life=0;e.hp--;if(e.hp<=0){state.score+=100;gainXP(e.type==='amansado'?35:40);state.particles.push({x:e.x,y:e.y,life:.35,r:8});}break;}}
  }
  state.shots=state.shots.filter(p=>p.life>0);
  for(const p of state.hazards){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(Math.hypot(p.x-state.x,p.y-state.y)<23){p.life=0;hurt(p.damage,p.text==='BOLA'?'CHUTE DO BAGRE.':'RESPOSTA: '+p.text+'.');}}
@@ -156,6 +173,7 @@ function step(dt){
  if(state&&phase==='finale'){movePlayer(dt);return;}
  if(!state||!['corridor','boss','interlude'].includes(phase))return;
  state.time+=dt;state.patience=Math.max(0,state.patience-dt*.16);
+ if(state.fanLevel>=2&&state.patience>0&&state.time-state.lastDamageAt>=5)state.patience=Math.min(100,state.patience+dt*.75);
  for(const k of ['cooldown','shotAt','inv','slow','stun'])state[k]=Math.max(0,state[k]-dt);
  movePlayer(dt);if(keys.e||keys.j||keys.cobrar)shoot();
  updateEnemies(dt);if(!['corridor','boss','interlude'].includes(phase))return;
@@ -169,13 +187,13 @@ function step(dt){
  }
 }
 function winBoss(){
- const index=state.level;state.defeated[index]=true;state.score+=1000;phase='transition';keys={};$('#boss-panel').classList.add('hidden');beep(900,.3);updateHud();
+ const index=state.level;state.defeated[index]=true;state.score+=1000;gainXP(500);phase='transition';keys={};$('#boss-panel').classList.add('hidden');beep(900,.3);updateHud();
  if(index===3){beginFinale();return;}
  modal(levels[index].boss+': cobrança vencida.','<b>'+levels[index].cleared+'</b><br><br>Mas o caminho foi bloqueado pela torcida fictícia <b>Amansados</b>. Vença as ondas para chegar ao próximo chefe.<br><br>Próximo chefe: <b>'+levels[index+1].boss+'</b>. Sua sanidade continua com o valor atual.',[['ENFRENTAR OS AMANSADOS',beginInterlude]],'CHEFE '+(index+1)+' / 4 · PASSAGEM BLOQUEADA');
 }
 function beginInterlude(){
  state.interlude={wave:0,total:3,nextWaveAt:4.5};placePlayer(560,450);state.enemies=[];state.shots=[];state.hazards=[];state.particles=[];state.boss=null;state.inv=2;state.cooldown=0;state.slow=0;state.stun=0;state.shotAt=0;keys={};
- state.checkpointScore=state.score;state.checkpointTime=state.time;phase='interlude';spawnOrganizadaWave();updateHud();draw();$('#world').focus();
+ state.checkpointScore=state.score;state.checkpointTime=state.time;state.checkpointXP=state.xp;phase='interlude';spawnOrganizadaWave();updateHud();draw();$('#world').focus();
 }
 function spawnOrganizadaWave(){
  state.interlude.wave++;state.interlude.nextWaveAt=4.5;state.inv=Math.max(state.inv,1);const count=5+state.level*2;
@@ -183,7 +201,7 @@ function spawnOrganizadaWave(){
  toast('AMANSADOS · ONDA '+state.interlude.wave+' / '+state.interlude.total+'. Abra caminho com as bolas de futebol!');
 }
 function winInterlude(){
- phase='transition';keys={};state.score+=500;state.hazards=[];
+ phase='transition';keys={};state.score+=500;gainXP(150);state.hazards=[];
  modal('Caminho livre.','Os Amansados saíram da passagem.<br><br>Próxima parada: <b>'+levels[state.level+1].boss+'</b>.<br>Sua sanidade continua com o valor atual.',[['ENTRAR NA PRÓXIMA FASE',()=>{loadLevel(state.level+1);$('#world').focus();}]],'INTERVALO VENCIDO · TORCIDA FICTÍCIA');
 }
 function beginFinale(){
@@ -263,11 +281,12 @@ function appendVictoryShare(result){
  const content=$('#modal-content');content.insertBefore(section,content.querySelector('button'));
 }
 function lose(){
- if(phase==='end')return;const wasInterlude=phase==='interlude';phase='end';keys={};$('#boss-panel').classList.add('hidden');state.patience=0;updateHud();const checkpoint=state.level,score=state.checkpointScore,time=state.checkpointTime;
- modal('Prestigiado.','“Após reunião produtiva, a diretoria reafirma sua confiança em Paulo Bracks.”<br><br>A sanidade acabou '+(wasInterlude?'no bloqueio dos <b>Amansados</b>':'na fase de <b>'+levels[checkpoint].boss+'</b>')+'. A cobrança ficou para a próxima reunião.<br><br>Você pode repetir só este confronto com a sanidade cheia.',[['TENTAR ESTE CONFRONTO DE NOVO',()=>{state.patience=100;state.score=score;state.time=time;if(wasInterlude)beginInterlude();else loadLevel(checkpoint);$('#world').focus();}],['VOLTAR À ARQUIBANCADA',menu]],'NOTA OFICIAL FICTÍCIA · FINAL RUIM');
+ if(phase==='end')return;const wasInterlude=phase==='interlude';phase='end';keys={};$('#boss-panel').classList.add('hidden');state.patience=0;updateHud();const checkpoint=state.level,score=state.checkpointScore,time=state.checkpointTime,xp=state.checkpointXP;
+ modal('Prestigiado.','“Após reunião produtiva, a diretoria reafirma sua confiança em Paulo Bracks.”<br><br>A sanidade acabou '+(wasInterlude?'no bloqueio dos <b>Amansados</b>':'na fase de <b>'+levels[checkpoint].boss+'</b>')+'. A cobrança ficou para a próxima reunião.<br><br>Repita este confronto com sanidade cheia e o XP do início dele.',[['TENTAR ESTE CONFRONTO DE NOVO',()=>{state.patience=100;state.score=score;state.time=time;state.xp=xp;state.fanLevel=fanLevelForXP(xp);state.lastDamageAt=time;state.upgradeUntil=0;if(wasInterlude)beginInterlude();else loadLevel(checkpoint);$('#world').focus();}],['VOLTAR À ARQUIBANCADA',menu]],'NOTA OFICIAL FICTÍCIA · FINAL RUIM');
 }
 function updateHud(){
  if(!state)return;const cfg=levels[state.level];$('#stage-label').textContent=`${profile?.nickname||'TORCEDOR'} · FASE ${state.level+1} / 4 · ${cfg.area}`;
+ updateXPHud();
  $('#objective').textContent=phase==='boss'?'Enfrente '+cfg.boss+': segure E / J para lançar bolas de futebol.':phase==='interlude'?'Os Amansados bloquearam a passagem. Vença todas as ondas.':'Reúna as três pautas e procure '+cfg.boss+'.';
  if(phase==='interlude')$('#stage-label').textContent=`INTERVALO ${state.level+1} / 3 · AMANSADOS · TORCIDA FICTÍCIA`;
  $('#patience-value').textContent=Math.ceil(state.patience)+'%';$('#patience-bar').style.width=state.patience+'%';$('#patience-bar').style.background=state.patience<30?'var(--red)':'var(--lime)';
@@ -292,6 +311,7 @@ function drawEnemy(e){
 function draw(){
  if(state&&(phase==='finale'||phase==='dismissal')){drawFinale();return;}
  if(!state)return;const cfg=levels[state.level];rect(0,0,1120,600,'#131d16');for(let y=60;y<580;y+=40)for(let x=24;x<1100;x+=40)rect(x,y,38,38,cfg.color);
+ drawRoomDecor();
  canvas.style.transform=window.innerWidth<=720?`translateX(${-(state.cameraX||0)/1120*100}%)`:'';
  const mini=$('#minimap').getContext('2d');mini.fillStyle='#101b12';mini.fillRect(0,0,140,75);
  if(phase==='corridor')stations().forEach(d=>{mini.fillStyle=d.kind==='gate'?'#ef9982':d.kind==='pauta'&&state.pautas[d.n]?'#69795c':'#c4f367';mini.fillRect(d.x/8,d.y/8,d.w/8,d.h/8);});
@@ -303,11 +323,11 @@ function draw(){
  else if(phase==='boss'&&state.boss){const b=state.boss;rect(b.x-72,b.y+20,145,34,'#667052');person(ctx,b.x,b.y,state.level,2.2);if(b.flash>0)rect(b.x-20,b.y-50,40,3,'#c4f367');
   label(cfg.boss.toUpperCase(),560,82,'#f0e9cf',18);rect(300,94,520,12,'#492f2c');rect(300,94,520*b.hp/b.max,12,b.shield?'#8faaa2':'#ec795f');
   label(b.shield?'EM REUNIÃO · ESCUDO TEMPORÁRIO':'RESISTÊNCIA À COBRANÇA: '+b.hp+' / '+b.max,560,125,b.shield?'#a6cfc1':'#e8b7a3',11);
-  label(cfg.quote,b.x,b.y+84,'#e2dbb9',12);
+  drawBossDialogue(b);
  }else{
   stations().forEach(d=>{const done=d.kind==='pauta'?state.pautas[d.n]:d.kind==='coffee'?state.coffee:false;rect(d.x-4,d.y-4,d.w+8,d.h+8,near()===d?'#c4f367':'#152017');rect(d.x,d.y,d.w,d.h,d.kind==='gate'?'#74503c':'#626e52');rect(d.x,d.y+d.h-12,d.w,12,'#394732');
    if(d.kind==='gate')person(ctx,d.x+75,d.y+10,state.level,1.3);else{rect(d.x+22,d.y+13,35,24,'#d6d9c3');rect(d.x+27,d.y+19,25,3,done?'#679d4b':'#919a80');}
-   label(d.name.toUpperCase(),d.x+d.w/2,d.y-17,d.kind==='gate'?'#eeb18e':'#d3dec5',10);if(done)label('✓ REUNIDA',d.x+d.w/2,d.y+d.h+23,'#c4f367',11);
+   drawRoomStation(d);label(d.name.toUpperCase(),d.x+d.w/2,d.y-17,d.kind==='gate'?'#eeb18e':'#d3dec5',10);if(done)label('✓ REUNIDA',d.x+d.w/2,d.y+d.h+23,'#c4f367',11);
   });
  }
  state.enemies.filter(e=>e.hp>0).forEach(drawEnemy);
