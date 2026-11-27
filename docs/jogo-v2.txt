@@ -48,7 +48,9 @@ Registros de partidas expiram em 90 dias. O perfil expira 90 dias após sua
 última participação. Dados expirados são filtrados e têm índice TTL para
 remoção física posterior pelo MongoDB.
 Retirar a adesão ou apagar o perfil solicita exclusão autenticada na API.
-Falha de conexão é informada; a chave fica disponível para nova tentativa.
+Retirar a adesão interrompe novos envios mesmo se a API estiver indisponível.
+Falha de exclusão online é informada; a chave fica para nova tentativa.
+Apagar o perfil local funciona mesmo com a exclusão online pendente.
 Apagar dados do navegador ou fechar uma aba com perfil temporário pode
 eliminar essa chave: o formulário do portal oferece o contato alternativo.
 Não há exportação automática de dados nem exclusão de posts externos.
@@ -116,6 +118,8 @@ produção, login com chave real, envio de email ou postagem em rede social.
 PUBLICAÇÃO E LIMITES
 Não fazer merge automático (AGENTS.md). Integrar o PR após revisão.
 Publicar backend e frontend pelo fluxo já existente Render/Vercel.
+Executar npm ci no backend antes de iniciar: o repositório legado contém
+node_modules versionado, que não deve substituir a instalação do lockfile.
 Não são necessárias novas variáveis de ambiente. Confirmar que ALLOWED_ORIGINS,
 se configurada, inclui https://www.galodopovo.com.br e o domínio sem www.
 Após deploy: conferir /api/game/leaderboard, recusa sem chave no admin,

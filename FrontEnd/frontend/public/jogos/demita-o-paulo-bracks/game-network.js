@@ -16,5 +16,5 @@ const gameOnline=(()=>{
  const oldLose=lose;lose=function(){const runState=state;oldLose();event(null,'attempt_loss');runState.online=runState.online||null;};
  const oldShare=appendVictoryShare;appendVictoryShare=function(result){oldShare(result);const panel=$('#modal-content .result-share');if(!panel)return;panel.querySelector('a[target="_blank"]')?.addEventListener('click',()=>event(result,'x_open'));panel.querySelector('a[download]')?.addEventListener('click',()=>event(result,'image_download'));[...panel.querySelectorAll('button')].forEach(button=>button.addEventListener('click',()=>event(result,button.textContent.includes('IMAGEM')?'native_share':'text_copy')));};
  $('#weekly-ranking').onclick=leaderboard;
- return {eligible,erase,leaderboard,event,finish};
+ return {eligible,erase,leaderboard,event,finish,stop(){if(state)state.online=null;}};
 })();
