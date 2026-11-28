@@ -12,5 +12,6 @@ test('a nova narrativa não publica os nomes e referências reais removidos',()=
 });
 test('links antigos redirecionam para a nova obra, inclusive seus arquivos',()=>{
  const config=JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8'));const rule=config.redirects.find(r=>r.source==='/jogos/demita-o-paulo-bracks/:path*');assert.ok(rule);assert.equal(rule.destination,'/jogos/demita-o-diretor/:path*');assert.equal(rule.permanent,true);
+ const trailing=config.redirects.find(r=>r.source==='/jogos/demita-o-paulo-bracks/');assert.ok(trailing);assert.equal(trailing.destination,'/jogos/demita-o-diretor/');assert.equal(trailing.permanent,true);
  const sitemap=fs.readFileSync(path.join(root,'public/sitemap.xml'),'utf8');assert.ok(sitemap.includes('/jogos/demita-o-diretor/'));assert.ok(!sitemap.includes('/jogos/demita-o-paulo-bracks/'));
 });

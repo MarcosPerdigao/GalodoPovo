@@ -46,6 +46,11 @@
   ],
   "redirects": [
     {
+      "source": "/jogos/demita-o-paulo-bracks/",
+      "destination": "/jogos/demita-o-diretor/",
+      "permanent": true
+    },
+    {
       "source": "/jogos/demita-o-paulo-bracks/:path*",
       "destination": "/jogos/demita-o-diretor/:path*",
       "permanent": true
