@@ -1,0 +1,47 @@
+{
+  "situacoes": [
+    "O atacante Hulk, de 39 anos, está em vias de encerrar sua passagem pelo Atlético-MG. Liberado pela diretoria alvinegra para resolver seu futuro, o jogador passou a treinar à parte na Cidade do Galo enquanto afina os detalhes de sua transferência para o Fluminense.\nFonte: Tempo",
+    "A promessa era que a SAF assumiria o passivo. Porém, em abril de 2026, a dívida ainda gira em torno de R$ 1,7 bilhão, sendo R$ 1 bilhão apenas em dívidas bancárias onerosas.",
+    "Na realidade, a gestão financeira admite que o clube ainda paga cerca de R$ 250 milhões por ano somente em juros, fazendo a dívida crescer mesmo com recorde de arrecadação.",
+    "Pedro Daniel admitiu em 2026 que o clube ainda não está sanado. O endividamento segue alto e as receitas são engolidas pelos juros.",
+    "Foi prometido que o dinheiro daria 'tranquilidade ao futebol'. O aporte ocorreu, mas a tranquilidade nunca chegou, refletindo-se em instabilidade contínua.",
+    "Promessa de rivalizar com Flamengo e Palmeiras. Na prática: falhas no elenco, perda das finais de 2024 e o time fora da Libertadores de 2025.",
+    "O discurso corporativo colidiu com a realidade: o Galo virou um 'moedor de técnicos', evidenciando falta de continuidade.",
+    "O ano de 2025 foi marcado por atrasos salariais, luvas pendentes, direitos de imagem atrasados e notificações extrajudiciais.",
+    "A gestão é ofuscada por crises de comunicação, dúvidas sobre o Fundo Galo Forte e falta de transparência sobre beneficiários.",
+    "Prometeram buscar capital internacional. No fim, o controle ficou restrito e centralizado nos próprios mecenas/credores locais.",
+    "O distanciamento aumentou com ingressos caros, elitização da Arena e um 'Conselho da Massa' sem voz ativa."
+  ],
+  "marcos": [
+    {
+      "data": "Julho / 2023",
+      "titulo": "Aprovação da SAF",
+      "desc": "Venda de 75% do clube aprovada. Promessa de quitação das dívidas onerosas."
+    },
+    {
+      "data": "Novembro / 2023",
+      "titulo": "Oficialização da SAF",
+      "desc": "A SAF passa a comandar oficialmente o clube. Começa o 'relógio' da gestão."
+    },
+    {
+      "data": "Dezembro / 2024",
+      "titulo": "Fracasso esportivo",
+      "desc": "Após um ano de altos e baixos, perda das finais da Copa do Brasil e Libertadores e forte desgaste esportivo."
+    },
+    {
+      "data": "Ano de 2025",
+      "titulo": "Atrasos e protestos",
+      "desc": "Elenco sofre com atrasos salariais e de imagem. Trocas sucessivas de técnicos e ambiente de instabilidade."
+    },
+    {
+      "data": "Fevereiro / 2026",
+      "titulo": "Queda de Sampaoli",
+      "desc": "Segunda passagem do técnico termina de forma abrupta, reforçando a crítica sobre falta de planejamento."
+    },
+    {
+      "data": "Abril / 2026",
+      "titulo": "Estopim da Massa",
+      "desc": "Goleada para o Flamengo, protestos contra a SAF e campanha #SAFNota0!."
+    }
+  ]
+}

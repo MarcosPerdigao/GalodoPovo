@@ -3,12 +3,13 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
-const nodemailer = require("nodemailer");
 const Parser = require("rss-parser");
 const cron = require("node-cron");
 const mongoose = require("mongoose");
 const { normalizarUrl } = require("./lib/urlUtils");
 const { createGameRouter, sameHash, hash } = require("./lib/game");
+
+const { finanças, COACH, linhaPublica, noticiasRevisadas, promessaPublica, diasCalendario, dataPublicada, noticiasPublicas, resumoSemanal } = require("./lib/editorial");
 
 const app = express();
 
@@ -35,19 +36,6 @@ function validarConfiguracoes() {
 
   if (ambienteProducao && !String(process.env.ALLOWED_ORIGINS || "").trim()) {
     avisos.push("ALLOWED_ORIGINS ausente em producao");
-  }
-
-  const emailUserConfigurado = Boolean(
-    String(process.env.EMAIL_USER || "").trim(),
-  );
-  const emailPasswordConfigurado = Boolean(
-    String(process.env.EMAIL_PASSWORD || "").trim(),
-  );
-
-  if (!emailUserConfigurado && !emailPasswordConfigurado) {
-    avisos.push("EMAIL_USER e EMAIL_PASSWORD ausentes; envio indisponivel");
-  } else if (emailUserConfigurado !== emailPasswordConfigurado) {
-    avisos.push("EMAIL_USER/EMAIL_PASSWORD com configuracao incompleta");
   }
 
   let rssTimeoutMs = RSS_TIMEOUT_PADRAO_MS;
@@ -84,7 +72,6 @@ function validarConfiguracoes() {
 
   return {
     rssTimeoutMs,
-    emailHabilitado: emailUserConfigurado && emailPasswordConfigurado,
   };
 }
 
@@ -153,10 +140,12 @@ const materiaSchema = new mongoose.Schema({
   fonteNome: { type: String, default: "Pulguinha (Bot)" },
   fonteUrl: { type: String, required: true, unique: true, trim: true },
   dataCriacao: { type: Date, default: Date.now },
+  dataPublicacao: { type: Date, default: null },
 });
 
 materiaSchema.index({ fonteUrl: 1 }, { unique: true });
 materiaSchema.index({ dataCriacao: -1 });
+materiaSchema.index({ dataPublicacao: -1 });
 
 const Materia = mongoose.model("Materia", materiaSchema);
 
@@ -248,11 +237,8 @@ promessaSchema.index({ ativa: 1, ordem: 1 });
 const Promessa = mongoose.model("Promessa", promessaSchema);
 
 const fontesRSS = [
-  {
-    nome: "GE.globo",
-    url: "https://ge.globo.com/rss/futebol/times/atletico-mg/",
-  },
-  { nome: "FalaGalo", url: "https://falagalo.com.br/feed/" },
+  // Em 28/11/2026 os feeds diretos do Atlético, GE e FalaGalo responderam
+  // 403, 400 e 404. Mantemos a fonte agregadora verificada, sem contornar bloqueios.
   {
     nome: "Google News",
     url: "https://news.google.com/rss/search?q=atletico+mg+saf&hl=pt-BR&gl=BR&ceid=BR:pt-419",
@@ -609,18 +595,15 @@ function formatarDataBR(data) {
 }
 
 function calcularDiasEntre(inicio, fim = null) {
-  const dataInicio = new Date(inicio);
-  const dataFim = fim ? new Date(fim) : new Date();
-
-  const diff = Math.abs(dataFim - dataInicio);
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
+  return diasCalendario(inicio, fim || new Date());
 }
 
 function serializarTecnico(t) {
   return {
     nome: t.nome,
     periodo: `${formatarDataBR(t.dataInicio)} - ${t.emCargo ? "Atual" : formatarDataBR(t.dataFim)}`,
-    motivo: t.motivo,
+    motivo: t.chave === "sampaoli" ? "Encerramento do vínculo" : t.motivo,
+    fonteUrl: t.chave === "eduardo_dominguez" ? COACH : t.chave === "sampaoli" ? "https://atletico.com.br/jorge-sampaoli-nao-e-mais-o-treinador-do-galo/" : null,
     dias: t.emCargo
       ? `${calcularDiasEntre(t.dataInicio)} dias`
       : `${calcularDiasEntre(t.dataInicio, t.dataFim)} dias`,
@@ -697,6 +680,10 @@ async function buscarNoticiasAutomaticas(origem = "manual") {
         }
 
         if (urlsConhecidas.has(linkNormalizado)) {
+          const publicada = dataPublicada(item);
+          if (publicada) {
+            await Materia.updateOne({ fonteUrl: linkNormalizado, dataPublicacao: null }, { $set: { dataPublicacao: publicada } });
+          }
           resumo.duplicados += 1;
           continue;
         }
@@ -704,9 +691,8 @@ async function buscarNoticiasAutomaticas(origem = "manual") {
         try {
           await Materia.create({
             titulo: item.title || "Sem título",
-            conteudo: item.contentSnippet
-              ? `${item.contentSnippet.substring(0, 220)}...`
-              : "Clique no link para ler.",
+            conteudo: "Leia a reportagem completa na fonte.",
+            dataPublicacao: dataPublicada(item),
             link: linkNormalizado,
             fonteNome: fonte.nome,
             fonteUrl: linkNormalizado,
@@ -802,8 +788,7 @@ app.get("/api/contador", async (req, res) => {
     const hoje = new Date();
 
     const dataInicioSAF = new Date("2023-11-01T00:00:00-03:00");
-    const diffSAF = Math.abs(hoje - dataInicioSAF);
-    const diasSAF = Math.floor(diffSAF / (1000 * 60 * 60 * 24));
+    const diasSAF = diasCalendario(dataInicioSAF, hoje);
 
     const tecnicoAtual = await Tecnico.findOne({
       ativo: true,
@@ -814,13 +799,14 @@ app.get("/api/contador", async (req, res) => {
       ? calcularDiasEntre(tecnicoAtual.dataInicio)
       : 0;
 
-    const totalPromessasQuebradas = await Promessa.countDocuments({
+    const totalPromessasAcompanhadas = await Promessa.countDocuments({
       ativa: true,
     });
 
     res.json({
       dias: diasSAF,
-      mentiras: totalPromessasQuebradas,
+      mentiras: totalPromessasAcompanhadas, // Compatibilidade com clientes antigos.
+      promessasAcompanhadas: totalPromessasAcompanhadas,
       diasTecnico,
     });
   } catch (err) {
@@ -839,23 +825,22 @@ app.get("/api/materias", async (req, res) => {
       Math.max(parseInt(req.query.limit || "20", 10), 1),
       100,
     );
-    const busca = String(req.query.q || "").trim();
+    const busca = String(req.query.q || "").trim().slice(0, 200);
+    const buscaLiteral = busca.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
     const filtro = busca
       ? {
           $or: [
-            { titulo: { $regex: busca, $options: "i" } },
-            { conteudo: { $regex: busca, $options: "i" } },
-            { fonteNome: { $regex: busca, $options: "i" } },
+            { titulo: { $regex: buscaLiteral, $options: "i" } },
+            { conteudo: { $regex: buscaLiteral, $options: "i" } },
+            { fonteNome: { $regex: buscaLiteral, $options: "i" } },
           ],
         }
       : {};
 
     const total = await Materia.countDocuments(filtro);
-    const lista = await Materia.find(filtro)
-      .sort({ dataCriacao: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
+    const registros = await Materia.find(filtro).sort({ dataPublicacao: -1, dataCriacao: -1 }).skip((page - 1) * limit).limit(limit).lean();
+    const lista = noticiasPublicas(registros, new Date(), false);
 
     res.json({
       total,
@@ -878,59 +863,8 @@ app.get("/api/materias", async (req, res) => {
 
 app.get("/api/resumo-semana", async (req, res) => {
   try {
-    const seteDiasAtras = new Date();
-    seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
-
-    let materiasBase = await Materia.find({
-      dataCriacao: { $gte: seteDiasAtras },
-    })
-      .sort({ dataCriacao: -1 })
-      .limit(30);
-
-    // Se a semana estiver vazia, usa as últimas matérias disponíveis
-    if (!materiasBase.length) {
-      materiasBase = await Materia.find().sort({ dataCriacao: -1 }).limit(30);
-    }
-
-    const itensProcessados = materiasBase
-      .map((m) => {
-        const textoBase = `${m.titulo || ""} ${m.conteudo || ""}`;
-        const score = pontuarMateria(textoBase);
-
-        return {
-          titulo: m.titulo,
-          tag: classificarTema(textoBase),
-          impacto: classificarImpacto(score),
-          resumo: resumirTexto(m.conteudo, m.titulo),
-          fonteUrl: m.fonteUrl,
-          dataCriacao: m.dataCriacao,
-          score,
-        };
-      })
-      .filter((item) => item.score >= 3)
-      .sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        return new Date(b.dataCriacao) - new Date(a.dataCriacao);
-      });
-
-    const temasUsados = new Set();
-    const itensUnicos = [];
-
-    for (const item of itensProcessados) {
-      if (!temasUsados.has(item.tag)) {
-        temasUsados.add(item.tag);
-        itensUnicos.push(item);
-      }
-
-      if (itensUnicos.length === 3) break;
-    }
-
-    const itensFinais =
-      itensUnicos.length >= 3 ? itensUnicos : itensProcessados.slice(0, 3);
-
-    res.json({
-      itens: itensFinais,
-    });
+    const materiasBase = await Materia.find({ dataPublicacao: { $gte: new Date(Date.now() - 7 * 86400000) } }).sort({ dataPublicacao: -1 }).limit(30).lean();
+    res.json({ itens: resumoSemanal(materiasBase) });
   } catch (err) {
     console.error("❌ Erro ao montar resumo da semana:", err);
     res.status(500).json({
@@ -949,12 +883,7 @@ app.get("/api/promessas-destaque", async (req, res) => {
       .lean();
 
     res.json({
-      itens: lista.map((p) => ({
-        id: p.chave,
-        titulo: p.titulo,
-        status: p.status,
-        resumo: p.resumo,
-      })),
+      itens: lista.map(promessaPublica),
     });
   } catch (err) {
     console.error("❌ Erro ao carregar promessas em destaque:", err);
@@ -969,10 +898,7 @@ app.get("/api/promessas", async (req, res) => {
       .lean();
 
     res.json({
-      itens: lista.map((p) => ({
-        titulo: p.titulo,
-        situacao: p.situacao,
-      })),
+      itens: lista.map(promessaPublica),
     });
   } catch (err) {
     console.error("❌ Erro ao carregar promessas:", err);
@@ -1140,14 +1066,7 @@ app.get("/api/tecnicos", async (req, res) => {
     const lista = await Tecnico.find({ ativo: true }).sort({ ordem: 1 }).lean();
 
     res.json({
-      itens: lista.map((t) => ({
-        nome: t.nome,
-        periodo: `${formatarDataBR(t.dataInicio)} - ${t.emCargo ? "Atual" : formatarDataBR(t.dataFim)}`,
-        motivo: t.motivo,
-        dias: t.emCargo
-          ? `${calcularDiasEntre(t.dataInicio)} dias`
-          : `${calcularDiasEntre(t.dataInicio, t.dataFim)} dias`,
-      })),
+      itens: lista.map(serializarTecnico),
     });
   } catch (err) {
     console.error("❌ Erro ao carregar técnicos:", err);
@@ -1173,16 +1092,9 @@ app.get("/api/admin/tecnicos", requireAdmin, async (req, res) => {
 
 app.get("/api/linha-do-tempo", async (req, res) => {
   try {
-    const lista = await LinhaDoTempo.find({ ativo: true })
-      .sort({ ordem: 1 })
-      .lean();
-
+    const lista = await LinhaDoTempo.find({ ativo: true }).sort({ ordem: 1 }).lean();
     res.json({
-      itens: lista.map((item) => ({
-        data: item.data,
-        titulo: item.titulo,
-        desc: item.desc,
-      })),
+      itens: linhaPublica(lista),
     });
   } catch (err) {
     console.error("❌ Erro ao carregar linha do tempo:", err);
@@ -1479,8 +1391,7 @@ app.get("/api/home", async (req, res) => {
     const hoje = new Date();
 
     const dataInicioSAF = new Date("2023-11-01T00:00:00-03:00");
-    const diffSAF = Math.abs(hoje - dataInicioSAF);
-    const diasSAF = Math.floor(diffSAF / (1000 * 60 * 60 * 24));
+    const diasSAF = diasCalendario(dataInicioSAF, hoje);
 
     const [
       promessas,
@@ -1497,71 +1408,28 @@ app.get("/api/home", async (req, res) => {
       Tecnico.find({ ativo: true }).sort({ ordem: 1 }).lean(),
       LinhaDoTempo.find({ ativo: true }).sort({ ordem: 1 }).lean(),
       Tecnico.findOne({ ativo: true, emCargo: true }).lean(),
-      Materia.find().sort({ dataCriacao: -1 }).limit(30).lean(),
+      Materia.find({ dataPublicacao: { $gte: new Date(Date.now() - 7 * 86400000) } }).sort({ dataPublicacao: -1 }).limit(30).lean(),
     ]);
 
     const diasTecnico = tecnicoAtual
       ? calcularDiasEntre(tecnicoAtual.dataInicio)
       : 0;
 
-    const itensProcessados = materiasBase
-      .map((m) => {
-        const textoBase = `${m.titulo || ""} ${m.conteudo || ""}`;
-        const score = pontuarMateria(textoBase);
-
-        return {
-          titulo: m.titulo,
-          tag: classificarTema(textoBase),
-          impacto: classificarImpacto(score),
-          resumo: resumirTexto(m.conteudo, m.titulo),
-          fonteUrl: m.fonteUrl,
-          dataCriacao: m.dataCriacao,
-          score,
-        };
-      })
-      .filter((item) => item.score >= 3)
-      .sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        return new Date(b.dataCriacao) - new Date(a.dataCriacao);
-      });
-
-    const temasUsados = new Set();
-    const resumoSemana = [];
-
-    for (const item of itensProcessados) {
-      if (!temasUsados.has(item.tag)) {
-        temasUsados.add(item.tag);
-        resumoSemana.push(item);
-      }
-
-      if (resumoSemana.length === 3) break;
-    }
-
-    const resumoSemanaFinal =
-      resumoSemana.length >= 3 ? resumoSemana : itensProcessados.slice(0, 3);
+    const resumoSemanaFinal = resumoSemanal(materiasBase, hoje);
 
     res.json({
       contador: {
         dias: diasSAF,
-        mentiras: promessas.length,
+        mentiras: promessas.length, // Compatibilidade; não é uma classificação de mentira.
+        promessasAcompanhadas: promessas.length,
         diasTecnico,
       },
-      promessas: promessas.map((p) => ({
-        titulo: p.titulo,
-        situacao: p.situacao,
-      })),
-      promessasDestaque: promessasDestaque.map((p) => ({
-        id: p.chave,
-        titulo: p.titulo,
-        status: p.status,
-        resumo: p.resumo,
-      })),
+      financeiro: finanças,
+      revisadoEm: "2026-11-28",
+      promessas: promessas.map(promessaPublica),
+      promessasDestaque: promessasDestaque.map(promessaPublica),
       tecnicos: tecnicos.map(serializarTecnico),
-      linhaDoTempo: linhaDoTempo.map((item) => ({
-        data: item.data,
-        titulo: item.titulo,
-        desc: item.desc,
-      })),
+      linhaDoTempo: linhaPublica(linhaDoTempo),
       resumoSemana: resumoSemanaFinal,
     });
   } catch (err) {
@@ -1699,16 +1567,6 @@ app.post("/api/termometro/votar", async (req, res) => {
   }
 });
 
-const transporter = configuracoes.emailHabilitado
-  ? nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    })
-  : null;
-
 const sugestoesLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
@@ -1720,59 +1578,9 @@ const sugestoesLimiter = rateLimit({
   },
 });
 
-app.post("/api/sugestoes", sugestoesLimiter, async (req, res) => {
-  const { nome, email, mensagem } = req.body;
-
-  const nomeLimpo = String(nome || "").trim();
-  const emailLimpo = String(email || "").trim();
-  const mensagemLimpa = String(mensagem || "").trim();
-
-  if (!nomeLimpo || nomeLimpo.length < 2) {
-    return res.status(400).json({
-      success: false,
-      message: "Nome inválido.",
-    });
-  }
-
-  const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpo);
-  if (!emailValido) {
-    return res.status(400).json({
-      success: false,
-      message: "E-mail inválido.",
-    });
-  }
-
-  if (!mensagemLimpa || mensagemLimpa.length < 10) {
-    return res.status(400).json({
-      success: false,
-      message: "Mensagem muito curta.",
-    });
-  }
-
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: process.env.EMAIL_TO || process.env.EMAIL_USER,
-    subject: "⚠️ NOVA DENÚNCIA - Galo do Povo",
-    text: `Nome: ${nomeLimpo}\nE-mail: ${emailLimpo}\n\nMensagem:\n${mensagemLimpa}`,
-  };
-
-  try {
-    if (!transporter) {
-      return res.status(503).json({
-        success: false,
-        message: "Envio de mensagem indisponível.",
-      });
-    }
-
-    await transporter.sendMail(mailOptions);
-    res.json({ success: true, message: "Mensagem enviada com sucesso." });
-  } catch (err) {
-    console.error("❌ Erro ao enviar sugestão:", err);
-    res.status(500).json({
-      success: false,
-      message: "Erro ao enviar mensagem.",
-    });
-  }
+// Compatibilidade do endereço: o portal deixou de receber mensagens por formulário.
+app.post("/api/sugestoes", sugestoesLimiter, (req, res) => {
+  res.status(410).json({ success: false, message: "Formulário desativado. Use o contato por e-mail informado no portal." });
 });
 
 const PORT = process.env.PORT || 4000;
@@ -1785,6 +1593,10 @@ async function iniciarServidor() {
     await garantirSeedPromessas();
     await garantirSeedTecnicos();
     await garantirSeedLinhaDoTempo();
+    // Inclusão idempotente de links e resumos próprios; não altera registros anteriores.
+    for (const { _id, ...noticia } of noticiasRevisadas) {
+      await Materia.updateOne({ fonteUrl: noticia.fonteUrl }, { $setOnInsert: noticia }, { upsert: true });
+    }
 
     app.listen(PORT, () => {
       console.log(`Backend ON na porta ${PORT}`);

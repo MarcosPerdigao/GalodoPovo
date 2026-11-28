@@ -224,8 +224,23 @@ test("exibe a secao financeira com metodologia", async () => {
   expect(
     screen.getByRole("heading", { name: "O custo da dívida" }),
   ).toBeInTheDocument();
-  expect(screen.getByText("Entenda o cálculo")).toBeInTheDocument();
+  expect(screen.getByText("Entenda os números")).toBeInTheDocument();
+  expect(screen.getByText("R$ 1.772.000.000")).toBeInTheDocument();
+  expect(screen.getByRole("link", {name: /Relatório Integrado 2025/})).toHaveAttribute("href", expect.stringContaining("20260430-Relatorio-Integrado-AM-SAFGALO.pdf"));
+  expect(screen.queryByText(/250 milhões por ano/)).not.toBeInTheDocument();
   expect(await screen.findByText("Promessa de teste")).toBeInTheDocument();
+});
+
+test("campanha ForaBracks abre composição voluntária e não altera o jogo fictício", async () => {
+  window.scrollTo = jest.fn();
+  configurarFetch();
+  render(<App />);
+  await screen.findByText("Promessa de teste");
+  fireEvent.click(screen.getByRole("button", { name: "Central de protestos" }));
+  const dialog=screen.getByRole("dialog", {name:"Campanhas e mobilizações"});
+  expect(within(dialog).getByRole("heading", {name:"#ForaBracks"})).toBeInTheDocument();
+  expect(decodeURIComponent(within(dialog).getByRole("link", {name:"Publicar minha opinião no X"}).href)).toContain("#ForaBracks");
+  expect(within(dialog).getByRole("link", {name:"Jogar e fazer a cobrança"})).toHaveAttribute("href","/jogos/demita-o-diretor/");
 });
 
 test("exibe dossie, indicadores e linha do tempo editorial", async () => {
@@ -266,7 +281,7 @@ test("nao renderiza padroes de mojibake na pagina publica", async () => {
     ),
   ).toBeInTheDocument();
   expect(screen.getByRole("heading", { name: "O custo da dívida" })).toBeInTheDocument();
-  expect(screen.getByText("Entenda o cálculo")).toBeInTheDocument();
+  expect(screen.getByText("Entenda os números")).toBeInTheDocument();
   expect(screen.getByRole("heading", { name: "Dossiê Pulguinha" })).toBeInTheDocument();
   expect(screen.getByText("Memória pública")).toBeInTheDocument();
   expect(document.body.textContent).not.toMatch(
