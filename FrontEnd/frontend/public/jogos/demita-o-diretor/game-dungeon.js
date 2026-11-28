@@ -11,7 +11,7 @@ const oldPerson=person;person=function(c,x,y,id=4,scale=1,walk=0){
  r(-4,-18,2,2,'#171a20');r(4,-18,2,2,'#171a20');r(-1,-12,4,1,'#784f37');
  if(avatar.accessory==='bone'){r(-10,-28,23,4,'#eee');r(-9,-32,17,5,'#242830');r(9,-28,9,3,'#eee');}if(avatar.accessory==='faixa')r(-9,-24,19,4,'#eee');if(avatar.accessory==='cachecol'){r(-15,-7,30,5,'#ddd');r(10,-3,5,17,'#ddd');r(10,4,5,3,'#343943');}
  // Faixas sólidas dão contraste ao texto mesmo na camisa listrada.
- r(-12,-3,24,7,avatar.shirt==='preta'?'#171a20':'#eee');r(-8,4,16,15,avatar.shirt==='preta'?'#171a20':'#eee');c.fillStyle=avatar.shirt==='preta'?'#fff':'#111';c.textAlign='center';const idol=String(avatar.idol||profile?.idol||'GALO').toUpperCase().slice(0,12);c.font='bold '+Math.min(4,23/(idol.length*.62))+'px monospace';c.fillText(idol,0,2);c.font='bold 12px monospace';c.fillText(String(avatar.number||12),0,16);c.restore();
+ r(-12,-3,24,7,avatar.shirt==='preta'?'#171a20':'#eee');r(-8,4,16,15,avatar.shirt==='preta'?'#171a20':'#eee');c.fillStyle=avatar.shirt==='preta'?'#fff':'#111';c.textAlign='center';const idol=String(avatar.idol||profile?.idol||'CDA').toUpperCase().slice(0,12);c.font='bold '+Math.min(4,23/(idol.length*.62))+'px monospace';c.fillText(idol,0,2);c.font='bold 12px monospace';c.fillText(String(avatar.number||12),0,16);c.restore();
 };
 const originalStart=start;start=function(level=0){originalStart(level);if(state&&phase==='corridor'){state.dodgeCooldown=0;state.dodgeTime=0;state.attackCues=[];$('#settings').disabled=false;}};$('#start').onclick=()=>start();
 const originalLoad=loadLevel;loadLevel=function(level){originalLoad(level);state.dodgeCooldown=0;state.dodgeTime=0;state.attackCues=[];$('#settings').disabled=false;};
