@@ -1,6 +1,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),game=path.join(root,'public/jogos/demita-o-diretor');
 test('a nova narrativa não publica os nomes e referências reais removidos',()=>{
+ for(const oldPhoto of ['rosto-rubens.jpg','rosto-rafael.jpg']) assert.ok(!fs.existsSync(path.join(root,'public',oldPhoto)),'Foto antiga não deve ser publicada: '+oldPhoto);
  const forbidden=/\b(?:Paulo\s+Bracks|Bracks|Pedro\s+Daniel|Rafael|Rubens|Menin|Cidade\s+do\s+Galo|Clube\s+Atlético\s+Mineiro|Arena\s+MRV)\b/i;
  for(const file of fs.readdirSync(game)){
   // Chaves técnicas legadas mantêm os perfis e recordes existentes no mesmo domínio.

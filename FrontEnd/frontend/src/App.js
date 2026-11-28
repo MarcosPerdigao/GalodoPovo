@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import "./App.css";
 import GamesSection from "./GamesSection";
 import GameHero from "./GameHero";
+import financeiroRevisado from "./financeiroRevisado.json";
+import contatoPublico from "./contatoPublico.json";
 
 const API_BASE =
   window.location.hostname === "localhost"
@@ -31,18 +33,10 @@ export default function App() {
   const [modalPromessasAberto, setModalPromessasAberto] = useState(false);
   const [modalTecnicosAberto, setModalTecnicosAberto] = useState(false);
   const [modalCampanhaAberto, setModalCampanhaAberto] = useState(false);
-  const [jurosRodando, setJurosRodando] = useState(0);
+  const [financeiro, setFinanceiro] = useState(financeiroRevisado);
   const [cabecalhoCompacto, setCabecalhoCompacto] = useState(false);
   const [carregando, setCarregando] = useState(true);
   const [erroApi, setErroApi] = useState("");
-  const [formulario, setFormulario] = useState({
-    nome: "",
-    email: "",
-    mensagem: "",
-  });
-  const [enviandoFormulario, setEnviandoFormulario] = useState(false);
-  const [mensagemFormulario, setMensagemFormulario] = useState("");
-  const [erroFormulario, setErroFormulario] = useState("");
 
   const [adminToken, setAdminToken] = useState(
     "",
@@ -68,35 +62,8 @@ export default function App() {
     (t) => t.motivo !== "Em cargo",
   ).length;
 
-  useEffect(() => {
-    const calcularJuros = () => {
-      const agora = new Date();
-      const anoAtual = agora.getFullYear();
-
-      const inicioDoAno = new Date(anoAtual, 0, 1, 0, 0, 0, 0);
-      const inicioProximoAno = new Date(anoAtual + 1, 0, 1, 0, 0, 0, 0);
-
-      const milissegundosNoAno =
-        inicioProximoAno.getTime() - inicioDoAno.getTime();
-
-      const jurosAno = 250000000;
-      const taxaPorMilissegundo = jurosAno / milissegundosNoAno;
-      const diferencaTempo = agora.getTime() - inicioDoAno.getTime();
-
-      setJurosRodando(Math.max(diferencaTempo * taxaPorMilissegundo, 0));
-    };
-
-    calcularJuros();
-    const intervaloJuros = setInterval(calcularJuros, 60000);
-
-    return () => clearInterval(intervaloJuros);
-  }, []);
-
-  const jurosFormatado = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    maximumFractionDigits: 0,
-  }).format(jurosRodando);
+  const formatarMoeda = valor => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(valor);
+  const formatarDataPublica = valor => new Date(valor).toLocaleDateString("pt-BR", {timeZone:"America/Sao_Paulo"});
 
   useEffect(() => {
     const atualizarCabecalho = () => {
@@ -162,6 +129,7 @@ export default function App() {
             dataHome.contador || { dias: 0, diasTecnico: 0, mentiras: 0 },
           );
           setMudancasSemana(dataHome.resumoSemana || []);
+          if (dataHome.financeiro) setFinanceiro(dataHome.financeiro);
           setPromessasDestaqueData(dataHome.promessasDestaque || []);
           setPromessasData(dataHome.promessas || []);
           setTecnicosData(dataHome.tecnicos || []);
@@ -317,44 +285,6 @@ export default function App() {
         behavior: reduzirMovimento ? "auto" : "smooth",
         block: "start",
       });
-    }
-  };
-
-  const handleFormularioChange = (e) => {
-    const { name, value } = e.target;
-    setFormulario((atual) => ({ ...atual, [name]: value }));
-  };
-
-  const handleEnviarFormulario = async (e) => {
-    e.preventDefault();
-    setMensagemFormulario("");
-    setErroFormulario("");
-    setEnviandoFormulario(true);
-
-    try {
-      const resposta = await fetch(`${API_BASE}/api/sugestoes`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formulario),
-      });
-
-      const data = await resposta.json();
-
-      if (!resposta.ok) {
-        throw new Error(data?.message || "Não foi possível enviar a mensagem.");
-      }
-
-      setMensagemFormulario(
-        "Mensagem enviada com sucesso. Obrigado por fortalecer o dossiê.",
-      );
-      setFormulario({ nome: "", email: "", mensagem: "" });
-    } catch (error) {
-      console.error(error);
-      setErroFormulario(error.message || "Erro ao enviar a mensagem.");
-    } finally {
-      setEnviandoFormulario(false);
     }
   };
 
@@ -1012,6 +942,7 @@ export default function App() {
             </p>
 
             <div className="campaign-grid">
+              <article className="campaign-item"><h3>#ForaBracks</h3><p>Opinião da torcida: queremos mudança na gestão do futebol. Cobrança esportiva, sem ameaças ou ataques à vida privada.</p><div className="campaign-links"><a href={"https://twitter.com/intent/tweet?text=" + encodeURIComponent("Quero mudança na gestão do futebol do Atlético. Minha cobrança como torcedor: #ForaBracks https://www.galodopovo.com.br/")} target="_blank" rel="noopener noreferrer">Publicar minha opinião no X</a></div></article>
               <article className="campaign-item"><h3>Demita o Diretor</h3><p>Uma aventura de ficção: crie seu torcedor e enfrente a burocracia do Clube da Arquibancada. Personagens e acontecimentos inventados.</p><div className="campaign-links"><a href="/jogos/demita-o-diretor/">Jogar e fazer a cobrança</a></div></article>
               <article className="campaign-item">
                 <h3>#SAFNota0!</h3>
@@ -1097,9 +1028,10 @@ export default function App() {
                       )}
                       <h3>{p.titulo}</h3>
                       {p.resumo && <p>{p.resumo}</p>}
+                      {p.fontes?.map(fonte => <p key={fonte.url}><a href={fonte.url} target="_blank" rel="noopener noreferrer">{fonte.nome}</a></p>)}
                       {p.situacao && (
                         <p className="document-note">
-                          <strong>{"Situa\u00e7\u00e3o hoje:"}</strong> {p.situacao}
+                          <strong>{"Registro revisado:"}</strong> {p.situacao}
                         </p>
                       )}
                     </div>
@@ -1134,6 +1066,7 @@ export default function App() {
 
             <p className="section-kicker">{"Rotatividade t\u00e9cnica"}</p>
             <h2 id="tecnicos-modal-titulo">{"T\u00e9cnicos da era SAF"}</h2>
+            <p>Contagem em dias de calendário de São Paulo desde o anúncio de cada treinador. Felipão já estava no cargo quando a SAF começou a operar. Saídas não significam necessariamente demissão unilateral.</p>
 
             {tecnicosOrdenados.length === 0 ? (
               <p className="empty-state">{"Nenhum t\u00e9cnico dispon\u00edvel no momento."}</p>
@@ -1168,6 +1101,7 @@ export default function App() {
                         <dd>{t.motivo}</dd>
                       </div>
                     </dl>
+                    {t.fonteUrl && <a href={t.fonteUrl} target="_blank" rel="noopener noreferrer">Consultar comunicado oficial</a>}
                   </article>
                 ))}
               </div>
@@ -1230,6 +1164,7 @@ export default function App() {
                   {"Enviar informa\u00e7\u00e3o"}
                 </button>
               </div>
+              <p className="independence-note">Revisão de fontes: 28/11/2026. Temas sem documentação suficiente estão sob verificação.</p>
               <p className="independence-note">{"Iniciativa independente, sem v\u00ednculo ou representa\u00e7\u00e3o oficial do clube ou de sua SAF."}</p>
             </div>
 
@@ -1257,7 +1192,7 @@ export default function App() {
           </div>
           <div className="stat-item">
             <span>Promessas acompanhadas</span>
-            <strong>{contador.mentiras || promessasData.length}</strong>
+            <strong>{contador.promessasAcompanhadas ?? contador.mentiras ?? promessasData.length}</strong>
           </div>
           <button
             type="button"
@@ -1275,18 +1210,17 @@ export default function App() {
 
         <section className="finance-section page-shell" aria-labelledby="financeiro-titulo">
           <div className="finance-panel">
-            <p className="section-kicker">Estimativa financeira</p>
-            <h2 id="financeiro-titulo">{"O custo da d\u00edvida"}</h2>
-            <p className="section-lead">
-              Acompanhamento estimado dos juros ao longo de 2026.
-            </p>
-            <p className="finance-value">{jurosFormatado}</p>
+            <p className="section-kicker">Finanças com fonte e data</p>
+            <h2 id="financeiro-titulo">{"O custo da dívida"}</h2>
+            <p className="section-lead">Endividamento líquido em 31/12/2025, conforme o relatório do clube. Revisão editorial: 28/11/2026.</p>
+            <p className="finance-value">{formatarMoeda(financeiro.endividamentoLiquido)}</p>
+            <p>Dívida onerosa na mesma data: <strong>{formatarMoeda(financeiro.dividaOnerosa)}</strong>.</p>
+            <p>Encargos sobre financiamentos/dívidas em 2025, consolidado: <strong>{formatarMoeda(financeiro.encargosFinanciamentos)}</strong>.</p>
+            <p><a href={financeiro.fonteUrl} target="_blank" rel="noopener noreferrer">{financeiro.fonteNome}</a></p>
             <details>
-              <summary>{"Entenda o c\u00e1lculo"}</summary>
-              <p>
-                {"Esta \u00e9 uma estimativa editorial baseada no custo anual informado de R$ 250 milh\u00f5es em juros. O valor \u00e9 calculado proporcionalmente ao tempo transcorrido no ano e n\u00e3o representa atualiza\u00e7\u00e3o cont\u00e1bil oficial em tempo real."}
-              </p>
-              <p>{"Base utilizada no c\u00e1lculo: R$ 250 milh\u00f5es por ano."}</p>
+              <summary>Entenda os números</summary>
+              <p>Valores históricos, sem contador de juros em tempo real. Encargos contábeis não equivalem ao total de despesas financeiras nem comprovam pagamentos em caixa. Não há base suficiente para projetar os juros ou a dívida atual de 2026.</p>
+              <p>{financeiro.atualizacao} <a href={financeiro.atualizacaoUrl} target="_blank" rel="noopener noreferrer">Consultar ata de 15/09/2026</a></p>
             </details>
           </div>
         </section>
@@ -1401,6 +1335,7 @@ export default function App() {
             <div>
               <p className="section-kicker">{"\u00daltimos registros"}</p>
               <h2 id="semana-titulo">O que mudou esta semana</h2>
+              <p className="section-lead">Fontes publicadas nos últimos sete dias. A coleta não altera a data da notícia.</p>
             </div>
           </div>
 
@@ -1416,6 +1351,7 @@ export default function App() {
                   </div>
                   <h3>{item.titulo}</h3>
                   <p>{item.resumo}</p>
+                  {item.dataPublicacao && <p>Publicado em {formatarDataPublica(item.dataPublicacao)} · {item.fonteNome}</p>}
                   <button
                     type="button"
                     className="btn btn--text"
@@ -1455,6 +1391,7 @@ export default function App() {
                   <time>{item.data}</time>
                   <h3>{item.titulo}</h3>
                   <p>{item.desc}</p>
+                  {item.fonteUrl && <a href={item.fonteUrl} target="_blank" rel="noopener noreferrer">Consultar fonte</a>}
                 </article>
               ))}
             </div>
@@ -1495,9 +1432,9 @@ export default function App() {
                   <div className="archive-meta">
                     <span>{m.fonteNome ? `Fonte: ${m.fonteNome}` : "Fonte n\u00e3o informada"}</span>
                     <span>
-                      {m.dataCriacao
-                        ? new Date(m.dataCriacao).toLocaleString("pt-BR")
-                        : "Data indispon\u00edvel"}
+                      {m.dataPublicacao
+                        ? `Publicado em ${formatarDataPublica(m.dataPublicacao)}`
+                        : `Publicação sem data confirmada${m.dataCriacao ? ` · coletado em ${formatarDataPublica(m.dataCriacao)}` : ""}`}
                     </span>
                   </div>
                   <h3>{m.titulo}</h3>
@@ -1562,47 +1499,11 @@ export default function App() {
             </button>
           </div>
 
-          <form className="contribute-form" onSubmit={handleEnviarFormulario}>
-            <label htmlFor="nome">Nome</label>
-            <input
-              id="nome"
-              type="text"
-              name="nome"
-              placeholder="Seu nome"
-              value={formulario.nome}
-              onChange={handleFormularioChange}
-              required
-            />
-
-            <label htmlFor="email">E-mail</label>
-            <input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="Seu e-mail"
-              value={formulario.email}
-              onChange={handleFormularioChange}
-              required
-            />
-
-            <label htmlFor="mensagem">Mensagem</label>
-            <textarea
-              id="mensagem"
-              name="mensagem"
-              placeholder="Digite aqui sua mensagem"
-              value={formulario.mensagem}
-              onChange={handleFormularioChange}
-              required
-              rows={6}
-            />
-
-            <button type="submit" className="btn btn--primary" disabled={enviandoFormulario}>
-              {enviandoFormulario ? "Enviando..." : "Enviar mensagem"}
-            </button>
-          </form>
-
-          {mensagemFormulario && <p className="success-state">{mensagemFormulario}</p>}
-          {erroFormulario && <p className="error-state">{erroFormulario}</p>}
+          <div className="contribute-contact">
+            <p>Contato exclusivamente por e-mail para informações, correções, privacidade e retirada de conteúdo.</p>
+            {contatoPublico.email ? <a className="btn btn--primary" href={"mailto:" + contatoPublico.email}>{contatoPublico.email}</a> : <p>Endereço de contato em atualização.</p>}
+            <p>Inclua somente as informações necessárias. Para pedidos sobre o jogo, indique “Privacidade do jogo” e seu apelido. Não envie senhas nem chaves de acesso.</p>
+          </div>
         </section>
       </main>
 
