@@ -1012,7 +1012,7 @@ export default function App() {
             </p>
 
             <div className="campaign-grid">
-              <article className="campaign-item"><h3>Demita o Paulo Bracks</h3><p>Proteste com humor: crie seu torcedor e enfrente a burocracia nesta paródia de futebol. Falas e situações fictícias.</p><div className="campaign-links"><a href="/jogos/demita-o-paulo-bracks/">Jogar e fazer a cobrança</a></div></article>
+              <article className="campaign-item"><h3>Demita o Diretor</h3><p>Uma aventura de ficção: crie seu torcedor e enfrente a burocracia do Clube da Arquibancada. Personagens e acontecimentos inventados.</p><div className="campaign-links"><a href="/jogos/demita-o-diretor/">Jogar e fazer a cobrança</a></div></article>
               <article className="campaign-item">
                 <h3>#SAFNota0!</h3>
                 <p>

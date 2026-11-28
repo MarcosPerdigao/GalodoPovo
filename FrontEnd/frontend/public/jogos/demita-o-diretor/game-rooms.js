@@ -1,4 +1,16 @@
 'use strict';
+// Elenco de cartum do universo fictício; sem retratos ou uniformes de pessoas reais.
+const fictionPerson=person;
+person=function(c,x,y,id=4,scale=1,walk=0){
+ if(id===4){fictionPerson(c,x,y,id,scale,walk);return;}const index=Math.max(0,Math.min(3,id)),coats=['#8164a8','#517bba','#bc8353','#a65e8c'],skins=['#c68f70','#e7c3a0','#795841','#a77e61'];
+ c.save();c.translate(x,y);c.scale(scale,scale);const r=(a,b,w,h,color)=>{c.fillStyle=color;c.fillRect(a,b,w,h);};
+ r(-14,24,29,4,'#0006');r(-9,16,7,10+walk,'#252838');r(4,16,7,10-walk,'#252838');r(-12,-5,25,23,coats[index]);r(-17,-3,5,16,skins[index]);r(13,-3,5,16,skins[index]);r(-3,-5,6,22,'#eee7d8');r(-1,-1,3,13,'#e6ba58');r(-8,-23,18,18,skins[index]);
+ if(index===0){r(-12,-24,26,4,'#443852');r(-8,-28,18,5,'#b1a1c8');r(2,-26,6,2,'#f0d894');}
+ if(index===1){r(-10,-26,22,5,'#a95148');r(-7,-18,7,5,'#32384c');r(3,-18,7,5,'#32384c');r(0,-17,3,2,'#32384c');}
+ if(index===2){r(-10,-25,22,4,'#dfdcc9');r(-6,-28,14,3,'#faf1d3');r(-4,-18,3,3,'#19222e');r(5,-18,3,3,'#19222e');r(9,-9,11,3,'#d6d0ba');}
+ if(index===3){r(-12,-24,26,4,'#384d69');r(-7,-28,16,5,'#6584ad');r(-4,-18,3,3,'#1a2130');r(4,-19,7,7,'#e3d08e');r(6,-17,3,3,'#3c526a');r(-5,-11,15,3,'#54433d');}
+ if(index===0)r(-4,-17,12,3,'#352d45');r(-1,-8,5,1,'#6f483a');c.restore();
+};
 // Objetos nas laterais e sobre as mesas; o caminho entre as mesas permanece livre.
 const ROOM_THEMES=[
  {name:'DEPARTAMENTO DE FUTEBOL',accent:'#d7e4ba',desk:'#555e68',edge:'#303741'},
@@ -49,3 +61,4 @@ drawBossDialogue=function(b){
  const words=(b.quote||levels[state.level].quote).split(' '),lines=[''];for(const word of words){const last=lines.length-1;if((lines[last]+' '+word).trim().length>40)lines.push(word);else lines[last]+=(lines[last]?' ':'')+word;}
  const center=Math.max(220,Math.min(900,b.x)),top=b.y+65,width=360,height=lines.length*18+21;rect(center-width/2-2,top-2,width+4,height+4,ROOM_THEMES[state.level].accent);rect(center-width/2,top,width,height,'#11161ef5');lines.forEach((line,i)=>label(line,center,top+21+i*18,'#f2eee2',14));
 };
+decorateMenu();

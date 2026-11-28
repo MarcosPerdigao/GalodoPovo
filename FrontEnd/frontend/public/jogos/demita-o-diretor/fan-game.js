@@ -2,7 +2,7 @@
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const defaultAvatar={skin:'#c6a183',hairStyle:'curto',hairColor:'#302b25',shirt:'listrada',accessory:'bone',number:12};
 let profile=null,avatar={...defaultAvatar};
-const FAN_LEVELS=[{xp:0,name:'Torcedor',power:'Chute simples'},{xp:300,name:'Fôlego',power:'Regeneração'},{xp:950,name:'Dobradinha',power:'Chute duplo'},{xp:1800,name:'Arquibancada',power:'Leque de bolas'},{xp:3000,name:'Massa completa',power:'Chute circular'}];
+const FAN_LEVELS=[{xp:0,name:'Torcedor',power:'Chute simples'},{xp:300,name:'Fôlego',power:'Regeneração'},{xp:950,name:'Dobradinha',power:'Chute duplo'},{xp:1800,name:'Arquibancada',power:'Leque de bolas'},{xp:3000,name:'Torcida completa',power:'Chute circular'}];
 let bossTutorialSeen=false;try{bossTutorialSeen=localStorage.getItem('gdp-boss-tutorial-v1')==='seen';}catch{}
 function fanLevelForXP(xp){let level=1;while(level<FAN_LEVELS.length&&xp>=FAN_LEVELS[level].xp)level++;return level;}
 function gainXP(amount){
@@ -20,17 +20,17 @@ function drawRoomStation(){}
 function updateBossDialogue(){}
 function drawBossDialogue(b){label(b.quote||levels[state.level].quote,b.x,b.y+84,'#e2dbb9',14);}
 const levels=[
- {boss:'Paulo Bracks',area:'CIDADE DO GALO',title:'O futebol pede explicações.',color:'#28392b',hp:22,quote:'“Precisamos confiar no processo.”',attack:'PROCESSO',pautas:['Planejamento do elenco','Critérios de contratação','Resultados do futebol'],cleared:'Você furou a blindagem do futebol. Agora leve o processo ao Pedro Daniel.'},
- {boss:'Pedro Daniel',area:'ESCRITÓRIO DO CEO',title:'O labirinto dos pareceres.',color:'#29353c',hp:28,quote:'“Ainda faltam alguns alinhamentos.”',attack:'PARECER',pautas:['Parecer jurídico','Validação financeira','Plano de transição'],cleared:'O processo saiu da mesa do CEO. Rafael ainda precisa autorizar.'},
- {boss:'Rafael Menin',area:'GABINETE / AUTORIZAÇÃO',title:'Autorizado a pedir autorização.',color:'#3a342b',hp:34,quote:'“Vamos avaliar o encaminhamento.”',attack:'REUNIÃO',pautas:['Resposta à torcida','Responsável interino','Prioridades do futebol'],cleared:'Rafael autorizou o encaminhamento. A decisão final é na mesa do Rubens.'},
- {boss:'Rubens Menin',area:'CONSELHO / DECISÃO FINAL',title:'A última palavra custa caro.',color:'#362b36',hp:42,quote:'“E o impacto dessa decisão no caixa?”',attack:'JUROS',pautas:['Custo da rescisão','Plano de sucessão','Origem dos recursos'],cleared:'Todas as instâncias vencidas. O botão finalmente está liberado.'}
+ {boss:'Nestor Carimbo',area:'CENTRO DE TREINAMENTO',title:'O futebol pede explicações.',color:'#28392b',hp:22,quote:'“Minha caneta só assina em ano bissexto.”',attack:'PROCESSO',pautas:['Planejamento do elenco','Critérios de contratação','Resultados do futebol'],cleared:'Você furou a blindagem do futebol. Agora leve o processo ao Célio Parecer.'},
+ {boss:'Célio Parecer',area:'ESCRITÓRIO DO CEO',title:'O labirinto dos pareceres.',color:'#29353c',hp:28,quote:'“Esse carimbo está no modo avião.”',attack:'PARECER',pautas:['Parecer jurídico','Validação financeira','Plano de transição'],cleared:'O processo saiu da mesa do CEO. Bento ainda precisa autorizar.'},
+ {boss:'Bento Protocolo',area:'GABINETE / AUTORIZAÇÃO',title:'Autorizado a pedir autorização.',color:'#3a342b',hp:34,quote:'“A autorização ficou presa no elevador.”',attack:'REUNIÃO',pautas:['Resposta à torcida','Responsável interino','Prioridades do futebol'],cleared:'Bento autorizou o encaminhamento. A decisão final é na mesa de Otávio.'},
+ {boss:'Otávio Martelo',area:'CONSELHO / DECISÃO FINAL',title:'A última palavra custa caro.',color:'#362b36',hp:42,quote:'“Esta reunião dura até acabar o café.”',attack:'JUROS',pautas:['Custo da rescisão','Plano de sucessão','Origem dos recursos'],cleared:'Todas as instâncias vencidas. O botão finalmente está liberado.'}
 ];
 const types={
  boleto:{name:'BOLETO',hp:1,speed:90,damage:7,color:'#e4dbb9',tip:'Persegue você. Derrube com uma cobrança.'},
  contrato:{name:'CONTRATO',hp:2,speed:64,damage:6,color:'#b7c8e1',tip:'Resiste a duas cobranças e deixa você lento.'},
  bagre:{name:'BAGRE',hp:1,speed:82,damage:6,color:'#d8ad77',tip:'Jogador fictício. Chuta bolas para todo lado.'},
  empresario:{name:'EMPRESÁRIO',hp:2,speed:48,damage:9,color:'#c9a1bf',tip:'Avança em rajadas. Não fique parado.'},
- amansado:{name:'AMANSADO',hp:2,speed:108,damage:7,color:'#d3a1a1',tip:'Adversário fictício. Avança em grupo e lança faixas de passa-pano.'}
+ carimbado:{name:'CARIMBADO',hp:2,speed:108,damage:7,color:'#d3a1a1',tip:'Adversário fictício. Avança em grupo e lança faixas de passa-pano.'}
 };
 let phase='menu',state=null,keys={},last=0,sound=false,audio,toastUntil=0,pausedFrom='corridor',best=0;
 const FIXED_STEP=1/120;let accumulator=0,hudElapsed=0,renderAlpha=1;
@@ -60,7 +60,7 @@ function modal(title,body,buttons,tag='ARQUIBANCADA / CENTRAL DE COBRANÇA'){
  keys={};const m=$('#modal');$('#modal-content').innerHTML=`<div class="modal-icon">${tag}</div><h2>${title}</h2><p>${body}</p>`;
  buttons.forEach(([text,fn],i)=>{const b=document.createElement('button');b.className=i?'small':'primary';b.textContent=text;b.onclick=()=>{m.close();fn();};$('#modal-content').appendChild(b);});if(!m.open)m.showModal();
 }
-function instructions(){modal('Da arquibancada à decisão.','Você é o <b>torcedor</b>. Atravesse quatro fases: Bracks, Pedro Daniel, Rafael Menin e Rubens Menin.<br><br><b>1.</b> Reúna as três pautas nos balcões. Aproxime-se e aperte <b>E</b>.<br><b>2.</b> Vá à porta do chefe e aperte <b>E</b> para iniciar o confronto.<br><b>3.</b> Segure <b>E ou J</b> para lançar bolas de futebol com mira automática, com intervalo de 0,45 segundo entre chutes. Desvie das respostas até esvaziar a barra de resistência.<br><br><b>WASD / setas:</b> mover.<br><b>Espaço:</b> Raça, que afasta adversários e limpa os obstáculos próximos.<br><br>No celular: direcional, botão CHUTAR e botão RAÇA. Café recupera sanidade uma vez por fase. <b>XP:</b> pautas e vitórias desbloqueiam regeneração após 5s sem dano, chute duplo, leque e chute circular. A progressão vale nesta partida. <b>Shift / ESQUIVAR:</b> avanço curto com proteção e recarga. Observe os avisos no chão antes dos ataques dos chefes.',[['PARTIU COBRAR',()=>{}]]);}
+function instructions(){modal('Da arquibancada à decisão.','Você é o <b>torcedor</b>. Atravesse quatro fases: Nestor Carimbo, Célio Parecer, Bento Protocolo e Otávio Martelo.<br><br><b>1.</b> Reúna as três pautas nos balcões. Aproxime-se e aperte <b>E</b>.<br><b>2.</b> Vá à porta do chefe e aperte <b>E</b> para iniciar o confronto.<br><b>3.</b> Segure <b>E ou J</b> para lançar bolas de futebol com mira automática, com intervalo de 0,45 segundo entre chutes. Desvie das respostas até esvaziar a barra de resistência.<br><br><b>WASD / setas:</b> mover.<br><b>Espaço:</b> Raça, que afasta adversários e limpa os obstáculos próximos.<br><br>No celular: direcional, botão CHUTAR e botão RAÇA. Café recupera sanidade uma vez por fase. <b>XP:</b> pautas e vitórias desbloqueiam regeneração após 5s sem dano, chute duplo, leque e chute circular. A progressão vale nesta partida. <b>Shift / ESQUIVAR:</b> avanço curto com proteção e recarga. Observe os avisos no chão antes dos ataques dos chefes.',[['PARTIU COBRAR',()=>{}]]);}
 function menu(){$('#registration').classList.add('hidden');phase='menu';keys={};$('#menu').classList.remove('hidden');$('#game').classList.add('hidden');$('#settings').disabled=false;}
 function start(level=0){
  if(!profile){openRegistration(true);return;}
@@ -124,7 +124,7 @@ function shoot(){
 function special(){
  if(!state||!['corridor','boss','interlude'].includes(phase)||state.cooldown>0)return;
  state.cooldown=12;state.stun=3;state.hazards=[];
- state.enemies.forEach(e=>{if(e.hp>0&&Math.hypot(e.x-state.x,e.y-state.y)<300){e.hp=0;state.score+=100;gainXP(e.type==='amansado'?35:40);}});
+ state.enemies.forEach(e=>{if(e.hp>0&&Math.hypot(e.x-state.x,e.y-state.y)<300){e.hp=0;state.score+=100;gainXP(e.type==='carimbado'?35:40);}});
  if(phase==='boss'&&Math.hypot(state.boss.x-state.x,state.boss.y-state.y)<350&&!state.boss.shield){state.boss.hp=Math.max(0,state.boss.hp-3);state.boss.flash=.2;}
  state.particles.push({x:state.x,y:state.y,life:.6,r:15});toast('RAÇA! Obstáculos limpos. Adversários atordoados por 3s.');beep(160,.3);
  if(phase==='boss'&&state.boss.hp<=0)winBoss();updateHud();
@@ -144,7 +144,7 @@ function movePlayer(dt){
 function updateEnemies(dt){
  for(const e of state.enemies){if(e.hp<=0)continue;e.clock+=dt;if(state.stun>0)continue;const t=types[e.type],angle=Math.atan2(state.y-e.y,state.x-e.x);
   if(e.type==='contrato'){e.x+=Math.cos(angle+.8*Math.sin(e.clock*2))*t.speed*dt;e.y+=Math.sin(angle+.8*Math.sin(e.clock*2))*t.speed*dt;}
-  else if(e.type==='amansado'){e.x+=Math.cos(angle)*t.speed*dt;e.y+=Math.sin(angle)*t.speed*dt;e.fireAt-=dt;if(e.fireAt<=0){fireHazard(e.x,e.y,angle,165,'PASSA PANO',6);e.fireAt=2;}}
+  else if(e.type==='carimbado'){e.x+=Math.cos(angle)*t.speed*dt;e.y+=Math.sin(angle)*t.speed*dt;e.fireAt-=dt;if(e.fireAt<=0){fireHazard(e.x,e.y,angle,165,'PASSA PANO',6);e.fireAt=2;}}
   else if(e.type==='bagre'){e.x+=Math.cos(e.clock*1.6)*t.speed*dt;e.y+=Math.sin(e.clock*1.1)*t.speed*dt;e.fireAt-=dt;if(e.fireAt<=0){fireHazard(e.x,e.y,angle,165,'BOLA',5);e.fireAt=1.65;}}
   else{const speed=e.type==='empresario'?(e.clock%2.4<.65?265:45):t.speed;e.x+=Math.cos(angle)*speed*dt;e.y+=Math.sin(angle)*speed*dt;}
   e.x=Math.max(35,Math.min(1085,e.x));e.y=Math.max(95,Math.min(550,e.y));
@@ -162,7 +162,7 @@ function updateBoss(dt){
 function updateShots(dt){
  for(const p of state.shots){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;
   if(phase==='boss'&&Math.hypot(p.x-state.boss.x,p.y-state.boss.y)<44){p.life=0;if(!state.boss.shield){state.boss.hp=Math.max(0,state.boss.hp-1);state.boss.flash=.12;state.score+=20;}}
-  else for(const e of state.enemies){if(e.hp>0&&Math.hypot(p.x-e.x,p.y-e.y)<24){p.life=0;e.hp--;if(e.hp<=0){state.score+=100;gainXP(e.type==='amansado'?35:40);state.particles.push({x:e.x,y:e.y,life:.35,r:8});}break;}}
+  else for(const e of state.enemies){if(e.hp>0&&Math.hypot(p.x-e.x,p.y-e.y)<24){p.life=0;e.hp--;if(e.hp<=0){state.score+=100;gainXP(e.type==='carimbado'?35:40);state.particles.push({x:e.x,y:e.y,life:.35,r:8});}break;}}
  }
  state.shots=state.shots.filter(p=>p.life>0);
  for(const p of state.hazards){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(Math.hypot(p.x-state.x,p.y-state.y)<23){p.life=0;hurt(p.damage,p.text==='BOLA'?'CHUTE DO BAGRE.':'RESPOSTA: '+p.text+'.');}}
@@ -189,7 +189,7 @@ function step(dt){
 function winBoss(){
  const index=state.level;state.defeated[index]=true;state.score+=1000;gainXP(500);phase='transition';keys={};$('#boss-panel').classList.add('hidden');beep(900,.3);updateHud();
  if(index===3){beginFinale();return;}
- modal(levels[index].boss+': cobrança vencida.','<b>'+levels[index].cleared+'</b><br><br>Mas o caminho foi bloqueado pela torcida fictícia <b>Amansados</b>. Vença as ondas para chegar ao próximo chefe.<br><br>Próximo chefe: <b>'+levels[index+1].boss+'</b>. Sua sanidade continua com o valor atual.',[['ENFRENTAR OS AMANSADOS',beginInterlude]],'CHEFE '+(index+1)+' / 4 · PASSAGEM BLOQUEADA');
+ modal(levels[index].boss+': cobrança vencida.','<b>'+levels[index].cleared+'</b><br><br>Mas o caminho foi bloqueado pela torcida fictícia <b>Carimbados</b>. Vença as ondas para chegar ao próximo chefe.<br><br>Próximo chefe: <b>'+levels[index+1].boss+'</b>. Sua sanidade continua com o valor atual.',[['ENFRENTAR OS CARIMBADOS',beginInterlude]],'CHEFE '+(index+1)+' / 4 · PASSAGEM BLOQUEADA');
 }
 function beginInterlude(){
  state.interlude={wave:0,total:3,nextWaveAt:4.5};placePlayer(560,450);state.enemies=[];state.shots=[];state.hazards=[];state.particles=[];state.boss=null;state.inv=2;state.cooldown=0;state.slow=0;state.stun=0;state.shotAt=0;keys={};
@@ -197,16 +197,16 @@ function beginInterlude(){
 }
 function spawnOrganizadaWave(){
  state.interlude.wave++;state.interlude.nextWaveAt=4.5;state.inv=Math.max(state.inv,1);const count=5+state.level*2;
- for(let i=0;i<count;i++){const side=i%2===0;spawnEnemy('amansado',side?90:1030,100+(Math.floor(i/2)*95)%410);}
- toast('AMANSADOS · ONDA '+state.interlude.wave+' / '+state.interlude.total+'. Abra caminho com as bolas de futebol!');
+ for(let i=0;i<count;i++){const side=i%2===0;spawnEnemy('carimbado',side?90:1030,100+(Math.floor(i/2)*95)%410);}
+ toast('CARIMBADOS · ONDA '+state.interlude.wave+' / '+state.interlude.total+'. Abra caminho com as bolas de futebol!');
 }
 function winInterlude(){
  phase='transition';keys={};state.score+=500;gainXP(150);state.hazards=[];
- modal('Caminho livre.','Os Amansados saíram da passagem.<br><br>Próxima parada: <b>'+levels[state.level+1].boss+'</b>.<br>Sua sanidade continua com o valor atual.',[['ENTRAR NA PRÓXIMA FASE',()=>{loadLevel(state.level+1);$('#world').focus();}]],'INTERVALO VENCIDO · TORCIDA FICTÍCIA');
+ modal('Caminho livre.','Os Carimbados saíram da passagem.<br><br>Próxima parada: <b>'+levels[state.level+1].boss+'</b>.<br>Sua sanidade continua com o valor atual.',[['ENTRAR NA PRÓXIMA FASE',()=>{loadLevel(state.level+1);$('#world').focus();}]],'INTERVALO VENCIDO · TORCIDA FICTÍCIA');
 }
 function beginFinale(){
  phase='finale';keys={};state.enemies=[];state.shots=[];state.hazards=[];state.particles=[];state.boss=null;state.interlude=null;state.cinematic=null;state.slow=0;placePlayer(560,485);
- $('#boss-panel').classList.add('hidden');toast('Rubens aprovou. Vá até a mesa e aperte E para assinar a demissão.');updateHud();draw();$('#world').focus();
+ $('#boss-panel').classList.add('hidden');toast('Otávio aprovou. Vá até a mesa e aperte E para assinar a demissão.');updateHud();draw();$('#world').focus();
 }
 function beginDismissal(){
  if(phase!=='finale'||!state.defeated.every(Boolean))return;
@@ -234,7 +234,7 @@ function drawFinale(){
   label(t<1.2?'PREPARANDO O TERMO...':t<2.5?'ASSINANDO...':t<3.4?'DEMISSÃO FORMALIZADA':t<5.3?'ENCERRANDO O EXPEDIENTE...':'A MASSA FEZ A DECISÃO ANDAR.',560,110,'#c4f367',17);
   if(t>1.2){const progress=Math.min(1,(t-1.2)/1);ctx.strokeStyle='#30462b';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(520,245);for(let i=0;i<=Math.floor(progress*35);i++)ctx.lineTo(520+i*2,245+Math.sin(i*1.3)*4);ctx.stroke();}
   if(t>=2.5){const drop=Math.min(1,(t-2.5)/.3);ctx.save();ctx.translate(560,240-(1-drop)*180);ctx.rotate(-.11);ctx.strokeStyle='#ce5142';ctx.lineWidth=4;ctx.strokeRect(-108,-27,216,54);ctx.fillStyle='#ce5142';ctx.font='bold 31px monospace';ctx.textAlign='center';ctx.fillText('DEMITIDO',0,10);ctx.restore();}
-  if(t>=5.3){rect(245,175,630,250,'#e5e7d7');label('NOTA OFICIAL · FICÇÃO',560,215,'#3a4b31',14);label('DIRETORIA DE FUTEBOL',560,258,'#24371f',25);label('O clube comunica o desligamento',560,304,'#344b2c',17);label('de Paulo Bracks neste universo do jogo.',560,334,'#344b2c',17);label('Obrigado pelos serviços prestados.',560,386,'#617153',13);
+  if(t>=5.3){rect(245,175,630,250,'#e5e7d7');label('NOTA OFICIAL · FICÇÃO',560,215,'#3a4b31',14);label('CLUBE DA ARQUIBANCADA',560,258,'#24371f',25);label('O clube comunica o desligamento',560,304,'#344b2c',17);label('de Nestor Carimbo, personagem fictício.',560,334,'#344b2c',17);label('Obrigado pelos serviços prestados.',560,386,'#617153',13);
    for(let i=0;i<40;i++){const x=70+(i*127)%980,y=65+((t-5.3)*100+i*37)%490;rect(x,y,5,10,i%2?'#c4f367':'#e9eddc');}
   }
  }
@@ -243,23 +243,23 @@ function drawFinale(){
 function victory(){
  phase='end';const score=Math.max(0,Math.round(state.score+state.patience*30-state.time*5));best=Math.max(best,score);try{localStorage.setItem('bracks-fan-best',best)}catch{}
  const result=Object.freeze({score,seconds:Math.floor(state.time)});state.lastResult=result;
- modal('A Massa venceu.','<b>PAULO BRACKS DEMITIDO. NO JOGO.</b><br><br>Quatro chefes vencidos em '+result.seconds+' segundos. A última assinatura saiu!<br>Pontuação: <b>'+score.toLocaleString('pt-BR')+'</b> · Recorde: '+best.toLocaleString('pt-BR'),[['JOGAR DE NOVO',()=>start()],['VOLTAR À ARQUIBANCADA',menu]],'CARIMBO FINAL · DEFERIDO');
+ modal('A torcida venceu.','<b>NESTOR CARIMBO DEMITIDO. NO JOGO.</b><br><br>Quatro chefes vencidos em '+result.seconds+' segundos. A última assinatura saiu!<br>Pontuação: <b>'+score.toLocaleString('pt-BR')+'</b> · Recorde: '+best.toLocaleString('pt-BR'),[['JOGAR DE NOVO',()=>start()],['VOLTAR À ARQUIBANCADA',menu]],'CARIMBO FINAL · DEFERIDO');
  appendVictoryShare(result);
 }
-const PUBLIC_GAME_URL='https://www.galodopovo.com.br/jogos/demita-o-paulo-bracks/';
+const PUBLIC_GAME_URL='https://www.galodopovo.com.br/jogos/demita-o-diretor/';
 function victoryShareText(result){
  const minutes=Math.floor(result.seconds/60),seconds=result.seconds%60;
- return 'Demiti o Paulo Bracks no jogo do Galo do Povo! ⚽\nVenci os 4 chefes com '+result.score.toLocaleString('pt-BR')+' pontos em '+minutes+'min '+String(seconds).padStart(2,'0')+'s.\nSua vez de vencer a burocracia!\n#ForaPauloBracks';
+ return 'Demiti Nestor Carimbo no jogo Demita o Diretor! ⚽\nVenci os 4 chefes com '+result.score.toLocaleString('pt-BR')+' pontos em '+minutes+'min '+String(seconds).padStart(2,'0')+'s.\nSua vez de vencer a burocracia!\n#DiretorDemitidoNoJogo';
 }
 function victoryShareUrl(result){return 'https://x.com/intent/tweet?'+new URLSearchParams({text:victoryShareText(result),url:PUBLIC_GAME_URL}).toString();}
 function createVictoryImage(result){
  const previousPhase=phase,previousCinematic=state.cinematic,previousPosition={x:state.x,y:state.y,prevX:state.prevX,prevY:state.prevY};
  try{phase='dismissal';state.cinematic={time:6.6,stamped:true};state.x=100;state.y=350;state.prevX=100;state.prevY=350;drawFinale();}finally{phase=previousPhase;state.cinematic=previousCinematic;Object.assign(state,previousPosition);}
  const picture=document.createElement('canvas');picture.width=1200;picture.height=675;const c=picture.getContext('2d');c.drawImage(canvas,0,0,1200,643);
- c.fillStyle='#101a12';c.fillRect(0,0,1200,72);c.fillRect(0,588,1200,87);c.textAlign='left';c.font='bold 33px monospace';c.fillStyle='#c4f367';c.fillText('A MASSA VENCEU!',30,46);c.textAlign='right';c.font='bold 22px monospace';c.fillStyle='#f0f2e3';c.fillText('#ForaPauloBracks',1170,44);
- c.textAlign='left';c.font='bold 25px monospace';c.fillStyle='#f0f2e3';c.fillText(result.score.toLocaleString('pt-BR')+' PONTOS · '+Math.floor(result.seconds/60)+'min '+String(result.seconds%60).padStart(2,'0')+'s',30,626);c.font='16px monospace';c.fillStyle='#aebfa2';c.fillText('DEMISSÃO CONCLUÍDA NO JOGO · PARÓDIA',30,655);c.textAlign='right';c.fillStyle='#c4f367';c.font='bold 22px monospace';c.fillText('galodopovo.com.br',1170,641);
+ c.fillStyle='#101a12';c.fillRect(0,0,1200,72);c.fillRect(0,588,1200,87);c.textAlign='left';c.font='bold 33px monospace';c.fillStyle='#c4f367';c.fillText('A TORCIDA VENCEU!',30,46);c.textAlign='right';c.font='bold 22px monospace';c.fillStyle='#f0f2e3';c.fillText('#DiretorDemitidoNoJogo',1170,44);
+ c.textAlign='left';c.font='bold 25px monospace';c.fillStyle='#f0f2e3';c.fillText(result.score.toLocaleString('pt-BR')+' PONTOS · '+Math.floor(result.seconds/60)+'min '+String(result.seconds%60).padStart(2,'0')+'s',30,626);c.font='16px monospace';c.fillStyle='#aebfa2';c.fillText('RESULTADO DE JOGO · PERSONAGENS FICTÍCIOS',30,655);c.textAlign='right';c.fillStyle='#c4f367';c.font='bold 22px monospace';c.fillText('galodopovo.com.br',1170,641);
  const src=picture.toDataURL('image/png');let file=null;
- try{const bytes=Uint8Array.from(atob(src.split(',')[1]),char=>char.charCodeAt(0));file=new File([bytes],'demissao-paulo-bracks-'+result.score+'.png',{type:'image/png'});}catch{}
+ try{const bytes=Uint8Array.from(atob(src.split(',')[1]),char=>char.charCodeAt(0));file=new File([bytes],'diretor-demitido-'+result.score+'.png',{type:'image/png'});}catch{}
  return {src,file};
 }
 function appendVictoryShare(result){
@@ -267,12 +267,12 @@ function appendVictoryShare(result){
  const heading=document.createElement('h3');heading.textContent='Leve a vitória para o X.';section.appendChild(heading);
  const description=document.createElement('p');description.textContent='Sugestão de publicação: revise o texto e publique na sua conta.';section.appendChild(description);
  let image=null;try{image=createVictoryImage(result);}catch{}
- if(image){const preview=document.createElement('img');preview.className='victory-share-image';preview.src=image.src;preview.alt='Comemoração da demissão no jogo, com pontuação, tempo e #ForaPauloBracks';preview.width=1200;preview.height=675;section.appendChild(preview);}
+ if(image){const preview=document.createElement('img');preview.className='victory-share-image';preview.src=image.src;preview.alt='Comemoração da demissão no jogo, com pontuação, tempo e #DiretorDemitidoNoJogo';preview.width=1200;preview.height=675;section.appendChild(preview);}
  const field=document.createElement('textarea');field.readOnly=true;field.rows=5;field.value=victoryShareText(result)+'\n'+PUBLIC_GAME_URL;field.setAttribute('aria-label','Sugestão de publicação no X');section.appendChild(field);
  const status=document.createElement('p');status.className='share-status';status.setAttribute('role','status');
  const canCopyImage=!!(image?.file&&navigator.clipboard?.write&&typeof ClipboardItem!=='undefined');
  if(canCopyImage){const share=document.createElement('button');share.type='button';share.className='primary';share.dataset.shareAction='image-x';share.textContent='COPIAR IMAGEM E ABRIR O X';share.onclick=async()=>{share.disabled=true;try{await navigator.clipboard.write([new ClipboardItem({'image/png':image.file})]);status.textContent='Imagem copiada! Cole no X com Ctrl+V ou Colar.';share.dispatchEvent(new Event('game-x-open'));window.location.assign(victoryShareUrl(result));}catch{status.textContent='O navegador não permitiu copiar a imagem. Baixe o PNG, abra o X com o texto e anexe o arquivo.';}finally{share.disabled=false;}};section.appendChild(share);}
- if(image){const download=document.createElement('a');download.className='small share-download';download.textContent='BAIXAR IMAGEM DA VITÓRIA';download.href=image.src;download.download='demissao-paulo-bracks-'+result.score+'.png';section.appendChild(download);}
+ if(image){const download=document.createElement('a');download.className='small share-download';download.textContent='BAIXAR IMAGEM DA VITÓRIA';download.href=image.src;download.download='diretor-demitido-'+result.score+'.png';section.appendChild(download);}
  const link=document.createElement('a');link.className=canCopyImage?'small':'primary';link.textContent='ABRIR X COM O TEXTO';link.href=victoryShareUrl(result);link.target='_blank';link.rel='noopener noreferrer';section.appendChild(link);
  if(image){const hint=document.createElement('p');hint.className='share-hint';hint.textContent=canCopyImage?'O primeiro botão copia a imagem e abre o X nesta aba com o texto pronto. No X, pressione Ctrl+V (ou Colar) para anexar a imagem e revise antes de publicar.':'Neste navegador, baixe a imagem e anexe o PNG ao texto sugerido no X.';section.appendChild(hint);}
  const copy=document.createElement('button');copy.type='button';copy.className='small';copy.dataset.shareAction='text_copy';copy.textContent='COPIAR TEXTO';section.appendChild(copy);
@@ -282,13 +282,13 @@ function appendVictoryShare(result){
 }
 function lose(){
  if(phase==='end')return;const wasInterlude=phase==='interlude';phase='end';keys={};$('#boss-panel').classList.add('hidden');state.patience=0;updateHud();const checkpoint=state.level,score=state.checkpointScore,time=state.checkpointTime,xp=state.checkpointXP;
- modal('Prestigiado.','“Após reunião produtiva, a diretoria reafirma sua confiança em Paulo Bracks.”<br><br>A sanidade acabou '+(wasInterlude?'no bloqueio dos <b>Amansados</b>':'na fase de <b>'+levels[checkpoint].boss+'</b>')+'. A cobrança ficou para a próxima reunião.<br><br>Repita este confronto com sanidade cheia e o XP do início dele.',[['TENTAR ESTE CONFRONTO DE NOVO',()=>{state.patience=100;state.score=score;state.time=time;state.xp=xp;state.fanLevel=fanLevelForXP(xp);state.lastDamageAt=time;state.upgradeUntil=0;if(wasInterlude)beginInterlude();else loadLevel(checkpoint);$('#world').focus();}],['VOLTAR À ARQUIBANCADA',menu]],'NOTA OFICIAL FICTÍCIA · FINAL RUIM');
+ modal('Prestigiado.','“Após 48 carimbos, o conselho fictício adiou a decisão.”<br><br>A sanidade acabou '+(wasInterlude?'no bloqueio dos <b>Carimbados</b>':'na fase de <b>'+levels[checkpoint].boss+'</b>')+'. A cobrança ficou para a próxima reunião.<br><br>Repita este confronto com sanidade cheia e o XP do início dele.',[['TENTAR ESTE CONFRONTO DE NOVO',()=>{state.patience=100;state.score=score;state.time=time;state.xp=xp;state.fanLevel=fanLevelForXP(xp);state.lastDamageAt=time;state.upgradeUntil=0;if(wasInterlude)beginInterlude();else loadLevel(checkpoint);$('#world').focus();}],['VOLTAR À ARQUIBANCADA',menu]],'NOTA OFICIAL FICTÍCIA · FINAL RUIM');
 }
 function updateHud(){
  if(!state)return;const cfg=levels[state.level];$('#stage-label').textContent=`${profile?.nickname||'TORCEDOR'} · FASE ${state.level+1} / 4 · ${cfg.area}`;
  updateXPHud();
- $('#objective').textContent=phase==='boss'?'Enfrente '+cfg.boss+': segure E / J para lançar bolas de futebol.':phase==='interlude'?'Os Amansados bloquearam a passagem. Vença todas as ondas.':'Reúna as três pautas e procure '+cfg.boss+'.';
- if(phase==='interlude')$('#stage-label').textContent=`INTERVALO ${state.level+1} / 3 · AMANSADOS · TORCIDA FICTÍCIA`;
+ $('#objective').textContent=phase==='boss'?'Enfrente '+cfg.boss+': segure E / J para lançar bolas de futebol.':phase==='interlude'?'Os Carimbados bloquearam a passagem. Vença todas as ondas.':'Reúna as três pautas e procure '+cfg.boss+'.';
+ if(phase==='interlude')$('#stage-label').textContent=`INTERVALO ${state.level+1} / 3 · CARIMBADOS · TORCIDA FICTÍCIA`;
  $('#patience-value').textContent=Math.ceil(state.patience)+'%';$('#patience-bar').style.width=state.patience+'%';$('#patience-bar').style.background=state.patience<30?'var(--red)':'var(--lime)';
  $('#signs').textContent=phase==='interlude'?state.interlude.wave+'/'+state.interlude.total+' ondas':state.pautas.filter(Boolean).length+'/3';$('#money').textContent=state.score.toLocaleString('pt-BR');$('#timer').textContent=String(Math.floor(state.time/60)).padStart(2,'0')+':'+String(Math.floor(state.time%60)).padStart(2,'0');
  $('#special').textContent=state.cooldown>0?'RAÇA · '+Math.ceil(state.cooldown)+'s':'RAÇA';$('#special').disabled=state.cooldown>0||!['corridor','boss','interlude'].includes(phase);
@@ -296,13 +296,13 @@ function updateHud(){
  const checklist=cfg.pautas.map((p,i)=>`<span class="${state.pautas[i]?'checked':''}">${state.pautas[i]?'✓':'□'} ${p}</span>`).join('');if($('#checklist').innerHTML!==checklist)$('#checklist').innerHTML=checklist;
  if(phase==='interlude')$('#checklist').textContent='Onda '+state.interlude.wave+' de '+state.interlude.total+' · '+state.enemies.filter(e=>e.hp>0).length+' adversários restantes · Segure E / J para lançar bolas de futebol.';
  $('#interact').disabled=phase==='dismissal';$('#interact').textContent=phase==='finale'?'ASSINAR / E':'CHUTAR / PEGAR';
- if(phase==='finale'||phase==='dismissal'){$('#stage-label').textContent='EPÍLOGO · A ÚLTIMA ASSINATURA';$('#objective').textContent=phase==='finale'?'Caminhe até a mesa e aperte E para demitir o diretor.':'Demissão em andamento...';$('#checklist').textContent='Bracks, Pedro Daniel, Rafael e Rubens: todas as etapas concluídas.';$('#signs').textContent='OK';}
+ if(phase==='finale'||phase==='dismissal'){$('#stage-label').textContent='EPÍLOGO · A ÚLTIMA ASSINATURA';$('#objective').textContent=phase==='finale'?'Caminhe até a mesa e aperte E para demitir o diretor.':'Demissão em andamento...';$('#checklist').textContent='Nestor Carimbo, Célio Parecer, Bento Protocolo e Otávio Martelo: todas as etapas concluídas.';$('#signs').textContent='OK';}
 }
 function drawBall(p){
  ctx.save();ctx.strokeStyle='#c4f36766';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(p.x-p.vx*.035,p.y-p.vy*.035);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.translate(p.x,p.y);ctx.rotate(state.time*16);ctx.fillStyle='#f3f4df';ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.fill();ctx.fillStyle='#1c2c22';ctx.beginPath();for(let i=0;i<5;i++){const a=i*Math.PI*2/5;ctx.lineTo(Math.cos(a)*3.5,Math.sin(a)*3.5);}ctx.closePath();ctx.fill();for(let i=0;i<3;i++){const a=i*Math.PI*2/3;ctx.fillRect(Math.cos(a)*6-1.5,Math.sin(a)*6-1.5,3,3);}ctx.restore();
 }
 function drawEnemy(e){
- const t=types[e.type];if(e.type==='amansado'){person(ctx,e.x,e.y,6,1.2);rect(e.x-12,e.y-29,24,4,'#a9554d');rect(e.x-12,e.y-3,24,15,'#74413e');label('AM',e.x,e.y+10,'#f1e0ca',10);}
+ const t=types[e.type];if(e.type==='carimbado'){person(ctx,e.x,e.y,6,1.2);rect(e.x-12,e.y-29,24,4,'#a9554d');rect(e.x-12,e.y-3,24,15,'#74413e');label('AM',e.x,e.y+10,'#f1e0ca',10);}
  else if(e.type==='bagre'){person(ctx,e.x,e.y,5,1.2);rect(e.x-10,e.y-5,22,15,'#a5845d');rect(e.x+12,e.y+17,9,9,'#e2e5da');}
  else if(e.type==='empresario'){person(ctx,e.x,e.y,0,1.2);rect(e.x+12,e.y+3,15,14,'#ab6e4d');}
  else{rect(e.x-14,e.y-21,28,38,t.color);rect(e.x-9,e.y-14,18,4,'#9f584b');if(e.type==='boleto')for(let i=0;i<5;i++)rect(e.x-10+i*4,e.y+5,2,8,'#303a2a');else{rect(e.x-9,e.y-4,18,2,'#6b768b');rect(e.x-9,e.y+2,14,2,'#6b768b');}}
@@ -319,7 +319,7 @@ function draw(){
  else if(state.boss){mini.fillStyle='#ef9982';mini.fillRect(state.boss.x/8-3,state.boss.y/8-3,6,6);}
  mini.fillStyle='#fff';mini.fillRect(state.x/8-2,state.y/8-2,4,4);
  rect(0,0,1120,58,'#141e17');label(cfg.area+' / '+(phase==='boss'?'SALA DO CHEFE':phase==='interlude'?'PASSAGEM BLOQUEADA':'CORREDOR DA BUROCRACIA'),560,34,'#bcccac',14);
- if(phase==='interlude'){label('AMANSADOS',560,105,'#e8b5a7',26);label('TORCIDA FICTÍCIA · ONDA '+state.interlude.wave+' / '+state.interlude.total,560,132,'#c4d7ba',13);label('ABRA CAMINHO COM AS BOLAS',560,560,'#c4f367',13);}
+ if(phase==='interlude'){label('CARIMBADOS',560,105,'#e8b5a7',26);label('TORCIDA FICTÍCIA · ONDA '+state.interlude.wave+' / '+state.interlude.total,560,132,'#c4d7ba',13);label('ABRA CAMINHO COM AS BOLAS',560,560,'#c4f367',13);}
  else if(phase==='boss'&&state.boss){const b=state.boss;rect(b.x-72,b.y+20,145,34,'#667052');person(ctx,b.x,b.y,state.level,2.2);if(b.flash>0)rect(b.x-20,b.y-50,40,3,'#c4f367');
   label(cfg.boss.toUpperCase(),560,82,'#f0e9cf',18);rect(300,94,520,12,'#492f2c');rect(300,94,520*b.hp/b.max,12,b.shield?'#8faaa2':'#ec795f');
   label(b.shield?'EM REUNIÃO · ESCUDO TEMPORÁRIO':'RESISTÊNCIA À COBRANÇA: '+b.hp+' / '+b.max,560,125,b.shield?'#a6cfc1':'#e8b7a3',11);
